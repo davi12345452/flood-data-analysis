@@ -1,36 +1,37 @@
 # Estações fluviométricas alvo — bacia Taquari-Antas (RS)
-# Códigos com "confirmar: true" ainda NÃO foram validados no inventário da ANA.
-# Regra do projeto: confirmar cada código no inventário antes de usar. Não chutar.
+# Códigos confirmados em 2026-07-28 no inventário telemétrico da ANA
+# (telemetriaws1.ana.gov.br/ServiceANA.asmx/ListaEstacoesTelemetricas).
 
 estacoes_fluviometricas:
   - nome: Santa Tereza
     codigo: 86472600
-    papel: montante (rio Taquari)
-    confirmar: true
+    rio: Rio Taquari
+    papel: montante
   - nome: Linha José Julio
     codigo: 86472000
+    rio: Rio Taquari
     papel: montante — SEM cota de inundação (só atenção e alerta; caso especial)
-    confirmar: true
   - nome: Muçum
     codigo: 86510000
+    rio: Rio Taquari
     papel: alvo principal (resposta mais rápida)
-    confirmar: true
   - nome: Encantado
-    codigo: null  # buscar no inventário
+    codigo: 86720000
+    rio: Rio Taquari
     papel: alvo principal
-    confirmar: true
   - nome: Estrela
-    codigo: null  # buscar no inventário
-    papel: alvo (referência para Cruzeiro do Sul)
-    confirmar: true
-  - nome: Lajeado
-    codigo: null  # buscar no inventário
-    papel: alvo
-    confirmar: true
+    codigo: 86879300
+    rio: Rio Taquari
+    papel: alvo — referência também para Lajeado e Cruzeiro do Sul
+    observacao: >
+      Não existe estação "Lajeado" no rio Taquari no inventário telemétrico da ANA.
+      Proposta pendente de aprovação: cobrir Lajeado por esta estação.
+      Lacunas severas no evento de 2024-05 (57% de cobertura em 01-03/05).
   - nome: Taquari
     codigo: 86950000
+    rio: Rio Taquari
     papel: jusante (exutório)
-    confirmar: true
+    observacao: lacunas severas no evento de 2024-05 (46% de cobertura em 01-03/05)
 
 usinas_ceran:
   # Fio d'água, sem regularização — defluência tratada como observação de montante.
@@ -41,7 +42,7 @@ usinas_ceran:
     observacao: rompimento parcial em 2024-05-02 — dados do período são suspeitos
 
 periodo:
-  inicio: "2010-01-01"
+  inicio: "2018-01-01"  # SOAP legado da ANA vazio antes de 2018; ONS horário desde 2019
   fim: hoje
 
 horizontes_previsao_horas: [3, 6, 12, 24]
