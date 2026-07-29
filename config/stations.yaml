@@ -1,0 +1,49 @@
+# Estações fluviométricas alvo — bacia Taquari-Antas (RS)
+# Códigos com "confirmar: true" ainda NÃO foram validados no inventário da ANA.
+# Regra do projeto: confirmar cada código no inventário antes de usar. Não chutar.
+
+estacoes_fluviometricas:
+  - nome: Santa Tereza
+    codigo: 86472600
+    papel: montante (rio Taquari)
+    confirmar: true
+  - nome: Linha José Julio
+    codigo: 86472000
+    papel: montante — SEM cota de inundação (só atenção e alerta; caso especial)
+    confirmar: true
+  - nome: Muçum
+    codigo: 86510000
+    papel: alvo principal (resposta mais rápida)
+    confirmar: true
+  - nome: Encantado
+    codigo: null  # buscar no inventário
+    papel: alvo principal
+    confirmar: true
+  - nome: Estrela
+    codigo: null  # buscar no inventário
+    papel: alvo (referência para Cruzeiro do Sul)
+    confirmar: true
+  - nome: Lajeado
+    codigo: null  # buscar no inventário
+    papel: alvo
+    confirmar: true
+  - nome: Taquari
+    codigo: 86950000
+    papel: jusante (exutório)
+    confirmar: true
+
+usinas_ceran:
+  # Fio d'água, sem regularização — defluência tratada como observação de montante.
+  # Nomes conforme dataset dados_hidrologicos_ho do ONS (verificado em 2026-07-28).
+  - nome_ons: MONTE CLARO
+  - nome_ons: CASTRO ALVES
+  - nome_ons: "14 DE JULHO"
+    observacao: rompimento parcial em 2024-05-02 — dados do período são suspeitos
+
+periodo:
+  inicio: "2010-01-01"
+  fim: hoje
+
+horizontes_previsao_horas: [3, 6, 12, 24]
+janelas_acumulado_chuva_horas: [1, 3, 6, 12, 24, 48, 72, 120]
+timezone_alvo: America/Sao_Paulo  # conversão única e explícita a partir de UTC

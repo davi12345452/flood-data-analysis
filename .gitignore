@@ -1,0 +1,22 @@
+# Dados — cache local, nunca versionado (exceto reference)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/*/.gitkeep
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Credenciais
+.env
+
+# Notebooks — checkpoints
+notebooks/.ipynb_checkpoints/
+
+# macOS
+.DS_Store
