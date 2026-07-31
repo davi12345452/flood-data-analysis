@@ -1,0 +1,8 @@
+nome,codigo,rio,papel,nome_ana,operadora,municipio,lat,lon,altitude_m,rio_ana,status
+Santa Tereza,86472600,Rio Taquari,montante,SANTA TEREZA,00082 - SGB-CPRM - Serviço Geológico do Brasil,SANTA TEREZA-RS,-29.1781,-51.7322,0.0,RIO TAQUARI,Ativo
+Linha José Julio,86472000,Rio das Antas,montante,LINHA JOSÉ JÚLIO,00082 - SGB-CPRM - Serviço Geológico do Brasil,SANTA TEREZA-RS,-29.0978,-51.6997,61.1,RIO DAS ANTAS,Ativo
+Muçum,86510000,Rio Taquari,alvo principal (resposta mais rápida),MUÇUM,00082 - SGB-CPRM - Serviço Geológico do Brasil,MUÇUM-RS,-29.1672,-51.8686,34.0,RIO TAQUARI,Ativo
+Encantado,86720000,Rio Taquari,alvo principal,ENCANTADO,00082 - SGB-CPRM - Serviço Geológico do Brasil,ENCANTADO-RS,-29.2344,-51.855,28.2,RIO TAQUARI,Ativo
+Estrela,86879300,Rio Taquari,alvo — referência também para Lajeado e Cruzeiro do Sul,ESTRELA,00082 - SGB-CPRM - Serviço Geológico do Brasil,ESTRELA-RS,-29.4733,-51.9622,-0.6,RIO TAQUARI,Ativo
+Porto Mariante,86895000,Rio Taquari,intermediária (não alvo) — redundância entre Estrela e Taquari,PORTO MARIANTE,00082 - SGB-CPRM - Serviço Geológico do Brasil,VENANCIO AIRES-RS,-29.6922,-51.97,-0.7,RIO TAQUARI,Ativo
+Taquari,86950000,Rio Taquari,jusante (exutório),TAQUARI,00082 - SGB-CPRM - Serviço Geológico do Brasil,TAQUARI-RS,-29.8069,-51.8758,-1.9,RIO TAQUARI,Ativo
