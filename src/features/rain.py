@@ -59,7 +59,13 @@ def acumulados(horaria: pd.DataFrame, janelas: list[int]) -> pd.DataFrame:
     for macro in horaria.columns:
         serie = horaria[macro]
         for w in janelas:
-            feats[f"chuva_{macro}_{w}h"] = serie.rolling(w, min_periods=w).sum().shift(1)
+            # Janelas longas toleram ~2% de horas faltantes: a soma usa só o
+            # observado (subconta levemente; não fabrica). Janelas curtas
+            # exigem completude — cada hora pesa demais.
+            min_p = w if w <= 12 else int(w * 0.98)
+            feats[f"chuva_{macro}_{w}h"] = (
+                serie.rolling(w, min_periods=min_p).sum().shift(1)
+            )
     return pd.DataFrame(feats, index=horaria.index)
 
 

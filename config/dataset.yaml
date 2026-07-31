@@ -1,0 +1,44 @@
+# Parâmetros do dataset supervisionado — Fase 5
+
+# Estações alvo (Lajeado é coberto por Estrela — decisão da Fase 0.5,
+# alinhada com a prática do SACE)
+alvos:
+  - 86510000   # Muçum
+  - 86720000   # Encantado
+  - 86879300   # Estrela (cobre Lajeado)
+
+horizontes_h: [3, 6, 12, 24]
+
+eventos:
+  # Um evento começa quando qualquer alvo cruza a cota de atenção.
+  # Blocos separados por menos que "fusao_gap_h" viram um evento só.
+  fusao_gap_h: 72
+  # Janela amostrada: [primeira ultrapassagem - antecedencia_h,
+  #                    última ultrapassagem + cauda_h]
+  antecedencia_h: 168   # 7 dias: cobre a janela de chuva de 120h + contexto
+  cauda_h: 72
+
+normais:
+  # Janelas de regime normal por ano (fora de eventos, com buffer),
+  # sorteadas com semente fixa. Proporção justificada no relatório.
+  por_ano: 4
+  duracao_h: 240
+  buffer_h: 48
+  semente: 42
+
+# Subconjunto de features por alvo: só montante físico + estado próprio.
+# Grupos: chuva_antas/medio/baixo, api, blocos de estação (jj, st, mu, en,
+# es, pm, tq), uhes
+subconjuntos:
+  86510000:  # Muçum: Antas + médio; montante jj/st; sem baixo vale
+    chuva: [antas, medio]
+    estacoes: [jj, st, mu]
+    uhes: true
+  86720000:  # Encantado: idem + próprio bloco
+    chuva: [antas, medio]
+    estacoes: [jj, st, mu, en]
+    uhes: true
+  86879300:  # Estrela: bacia inteira até aqui
+    chuva: [antas, medio, baixo]
+    estacoes: [jj, st, mu, en, es]
+    uhes: true

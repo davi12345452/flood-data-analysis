@@ -11,14 +11,19 @@ para Parquet aqui seria retrabalho — o recorte da bacia e a tabularização
 acontecem na Fase 3 com xarray/cfgrib. O que a regra protege (análise nunca
 depender de rede) continua garantido pelo cache local.
 
-Nota (regra 8): o "arquivo histórico único 1998-2024" mencionado no idea.md
-não existe no FTP — a raiz de GPM/ só tem DAILY/, HOURLY/, CLIMATOLOGY/ etc.
+Nota: o arquivo histórico único (DAILY/MERGE_NEW_1998_2024.tar.gz, 4,1 GB)
+existe e foi baixado na Fase 3 para data/raw/merge/historico/ — a nota
+anterior dizendo o contrário estava errada (listing truncado na Fase 1).
+
+Modo "windows": baixa o horário das janelas amostradas da Fase 5
+(data/processed/janelas_amostradas.json).
 """
 
 from __future__ import annotations
 
 import datetime as dt
 import sys
+from pathlib import Path
 import time
 
 import httpx
@@ -84,6 +89,62 @@ def run_events() -> None:
     _reportar("hourly/eventos", baixados, faltantes)
 
 
+def run_windows(caminho_json: str, workers: int = 6, margem_h: int = 120) -> None:
+    """Baixa o horário para janelas arbitrárias (Fase 5: janelas amostradas).
+
+    O arquivo JSON é uma lista de {nome, inicio, fim} (timestamps ISO, UTC).
+    Idempotente; paralelizado com pool moderado (o sequencial levaria ~12h
+    para as ~29k horas amostradas).
+    """
+    import json
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    cfg = load_config("ingest")
+    base, pausa = cfg["merge"]["base_url"], cfg["merge"]["pausa_s"]
+    janelas = json.loads(Path(caminho_json).read_text(encoding="utf-8"))
+
+    pendentes = []
+    vistos: set[str] = set()
+    for j in janelas:
+        # margem: a janela de acumulado mais longa (120h) precisa de chuva
+        # ANTES do início da amostragem
+        ini = (dt.datetime.fromisoformat(j["inicio"]).replace(tzinfo=None)
+               - dt.timedelta(hours=margem_h))
+        fim = dt.datetime.fromisoformat(j["fim"]).replace(tzinfo=None)
+        ts = ini.replace(minute=0, second=0, microsecond=0)
+        while ts <= fim:
+            chave = f"{ts:%Y%m%d%H}"
+            if chave not in vistos:
+                vistos.add(chave)
+                pendentes.append(ts)
+            ts += dt.timedelta(hours=1)
+
+    local = threading.local()
+    faltantes: list[str] = []
+    trava = threading.Lock()
+    contagem = {"baixados": 0, "feitos": 0}
+
+    def worker(ts: dt.datetime) -> None:
+        if not hasattr(local, "client"):
+            local.client = make_client()
+        dest = (RAW / "merge" / "hourly" / f"{ts:%Y}" / f"{ts:%m}"
+                / f"MERGE_CPTEC_{ts:%Y%m%d%H}.grib2")
+        fal: list[str] = []
+        novo = _baixar(local.client, url_hourly(base, ts), dest, pausa, fal)
+        with trava:
+            faltantes.extend(fal)
+            contagem["baixados"] += int(novo)
+            contagem["feitos"] += 1
+            if contagem["feitos"] % 2000 == 0:
+                print(f"[merge] {contagem['feitos']}/{len(pendentes)} horas", flush=True)
+
+    print(f"[merge] janelas: {len(janelas)}, horas únicas: {len(pendentes)}", flush=True)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(worker, pendentes))
+    _reportar("hourly/janelas", contagem["baixados"], faltantes)
+
+
 def _reportar(rotulo: str, baixados: int, faltantes: list[str]) -> None:
     print(f"[merge] {rotulo}: baixados={baixados} faltantes(404)={len(faltantes)}")
     if faltantes:
@@ -100,3 +161,6 @@ if __name__ == "__main__":
         run_daily()
     if modo in ("events", "all"):
         run_events()
+    if modo == "windows":
+        run_windows(sys.argv[2] if len(sys.argv) > 2
+                    else "data/processed/janelas_amostradas.json")

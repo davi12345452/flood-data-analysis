@@ -198,12 +198,57 @@ def processar_horarios(cache: "PesosPorGrade") -> None:
         (INTERIM_MERGE / "ilegiveis_horaria.txt").write_text("\n".join(ilegiveis) + "\n")
 
 
+def processar_janelas(cache: "PesosPorGrade", caminho_json: Path,
+                      margem_h: int = 120) -> None:
+    """Agrega o horário das janelas amostradas da Fase 5 (eventos + normais).
+
+    margem_h espelha o download: chuva anterior ao início da amostragem para
+    os acumulados longos.
+    """
+    import json
+
+    janelas = json.loads(Path(caminho_json).read_text(encoding="utf-8"))
+    destino = INTERIM_MERGE / "horaria"
+    destino.mkdir(parents=True, exist_ok=True)
+    ilegiveis = []
+    for j in janelas:
+        out = destino / f"janela={j['nome']}.parquet"
+        if out.exists():
+            continue
+        ini = pd.Timestamp(j["inicio"]).floor("h") - pd.Timedelta(hours=margem_h)
+        fim = pd.Timestamp(j["fim"]).floor("h")
+        linhas = []
+        ts = ini
+        while ts <= fim:
+            a = (RAW / "merge" / "hourly" / f"{ts:%Y}" / f"{ts:%m}"
+                 / f"MERGE_CPTEC_{ts:%Y%m%d%H}.grib2")
+            if a.exists():
+                valores = agregar_arquivo(a, cache)
+                if valores is None:
+                    ilegiveis.append(a.name)
+                else:
+                    linhas.extend(
+                        {"ts_utc": ts - pd.Timedelta(hours=1), "codigo": c, "chuva_mm": v}
+                        for c, v in valores.items()
+                    )
+            ts += pd.Timedelta(hours=1)
+        pd.DataFrame(linhas).to_parquet(out, index=False)
+        print(f"[merge_agg] janela {j['nome']}: {len(linhas)} linhas", flush=True)
+    if ilegiveis:
+        (INTERIM_MERGE / "ilegiveis_janelas.txt").write_text("\n".join(ilegiveis) + "\n")
+
+
 def run(modo: str = "all") -> None:
     cache = PesosPorGrade()
     if modo in ("daily", "all"):
         processar_diarios(cache)
     if modo in ("events", "all"):
         processar_horarios(cache)
+    if modo == "windows":
+        import sys as _sys
+        caminho = (_sys.argv[2] if len(_sys.argv) > 2
+                   else ROOT / "data" / "processed" / "janelas_amostradas.json")
+        processar_janelas(cache, Path(caminho))
 
 
 if __name__ == "__main__":
