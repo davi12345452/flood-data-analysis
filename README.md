@@ -8,7 +8,7 @@ vazão defluente das usinas do rio das Antas.
 
 ## Estado atual
 
-**Fase 5 concluída** — dataset supervisionado com amostragem por evento (reports/05_dataset.md). Ver
+**Fase 6 concluída** — quatro baselines avaliados em CV por evento (reports/06_baselines.md). Ver
 `reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
 premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
 
