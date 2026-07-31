@@ -1,0 +1,41 @@
+# Parâmetros de ingestão — Fase 1
+periodo:
+  inicio: "2018-01-01"  # SOAP legado vazio antes de 2018; ONS horário desde 2019
+
+# Janelas dos eventos de referência (com folga), usadas para o MERGE horário
+janelas_eventos:
+  - nome: set2023
+    inicio: "2023-08-20"
+    fim: "2023-09-30"
+  - nome: nov2023
+    inicio: "2023-10-25"
+    fim: "2023-12-05"
+  - nome: mai2024
+    inicio: "2024-04-10"
+    fim: "2024-06-05"
+
+ana_soap:
+  base_url: "http://telemetriaws1.ana.gov.br/ServiceANA.asmx"
+  pausa_s: 0.6  # serviço legado devolve 504 sob carga; nunca rodar 2 jobs em paralelo
+
+ons:
+  ckan_base: "https://dados.ons.org.br/api/3/action"
+  datasets:
+    - dados_hidrologicos_ho
+    - dados-hidrologicos-res
+
+merge:
+  base_url: "https://ftp.cptec.inpe.br/modelos/tempo/MERGE/GPM"
+  pausa_s: 0.15
+
+sace:
+  index_url: "https://www.sgb.gov.br/sace/boletins.php?idbacia=9"
+  base_url: "https://www.sgb.gov.br/sace/"
+  pausa_s: 0.5
+
+rigeo:
+  cotas_pdf_url: "https://rigeo.sgb.gov.br/bitstream/doc/24429/1/cotas_sace_taquari_mucum_artigo.pdf"
+
+http:
+  user_agent: "flood-data-analysis/0.1 (pesquisa pessoal; [e-mail removido do histórico])"
+  timeout_s: 120

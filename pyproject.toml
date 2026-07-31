@@ -6,8 +6,10 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "httpx>=0.27",
     "pandas>=2.2",
+    "pdfplumber>=0.11.10",
     "pyarrow>=17",
     "pyyaml>=6.0",
+    "tabulate>=0.10.0",
     "tenacity>=9.0",
 ]
 

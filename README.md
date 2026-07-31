@@ -8,8 +8,18 @@ vazão defluente das usinas do rio das Antas.
 
 ## Estado atual
 
-**Fase 0 concluída** — reconhecimento de fontes. Ver `reports/00_fontes.md` para o status
-detalhado de cada fonte e a lista de bloqueios.
+**Fase 1 concluída** — ingestão com cache, retry e proveniência. Ver
+`reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
+premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
+
+## Uso
+
+```bash
+make ingest     # baixa tudo o que falta (idempotente, ~2,1 GB na primeira vez)
+make reference  # extrai cotas de referência (data/reference/cotas_referencia.csv)
+make coverage   # regenera reports/01_cobertura.md a partir do cache
+make test       # pytest
+```
 
 ## Setup
 

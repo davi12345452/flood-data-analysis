@@ -9,8 +9,12 @@ estacoes_fluviometricas:
     papel: montante
   - nome: Linha José Julio
     codigo: 86472000
-    rio: Rio Taquari
-    papel: montante — SEM cota de inundação (só atenção e alerta; caso especial)
+    rio: Rio das Antas  # conforme boletim SACE; recebe a onda das UHEs CERAN
+    papel: montante
+    observacao: >
+      idea.md dizia "sem cota de inundação", mas o boletim SACE de 2026-07-28
+      declara inundação = 2450 cm (além de atenção 650 e alerta 1000).
+      Premissa da Armadilha 7 possivelmente desatualizada — confirmar.
   - nome: Muçum
     codigo: 86510000
     rio: Rio Taquari
@@ -27,6 +31,18 @@ estacoes_fluviometricas:
       Não existe estação "Lajeado" no rio Taquari no inventário telemétrico da ANA.
       Proposta pendente de aprovação: cobrir Lajeado por esta estação.
       Lacunas severas no evento de 2024-05 (57% de cobertura em 01-03/05).
+  - nome: Bom Retiro do Sul
+    codigo: 86882000
+    rio: Rio Taquari
+    papel: intermediária (não alvo) — redundância entre Estrela e Taquari
+    observacao: >
+      Aparece nos boletins SACE mas o SOAP legado devolve 0 registros
+      (2018-2026). Possivelmente operada por outra rede. Sem série utilizável
+      por ora; reavaliar quando a credencial HidroWebService chegar.
+  - nome: Porto Mariante
+    codigo: 86895000
+    rio: Rio Taquari
+    papel: intermediária (não alvo) — redundância entre Estrela e Taquari
   - nome: Taquari
     codigo: 86950000
     rio: Rio Taquari
