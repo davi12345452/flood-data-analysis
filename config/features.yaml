@@ -1,0 +1,32 @@
+# Parâmetros de features — Fase 4
+
+# Janelas de acumulado de chuva (horas), terminando na última hora COMPLETA
+# antes de t (causal: chuva da hora t ainda não é conhecida em t).
+janelas_chuva_h: [1, 3, 6, 12, 24, 48, 72, 120]
+
+# Índice de precipitação antecedente (diário, 1998+): dois decaimentos por
+# macro-unidade — memória curta (~semanas) e longa (~estação úmida).
+api_decaimentos: [0.90, 0.98]
+
+# Macro-unidades de chuva: agregação das sub-bacias incrementais em 3 blocos
+# físicos, ponderada por área incremental. Contém a contagem de features
+# (3 blocos × 8 janelas em vez de 7 × 8) sem perder a estrutura do sinal.
+# Nota: a unidade de Santa Tereza é idêntica à de Muçum (mesmo polígono
+# lev08) e entra uma única vez, via Muçum.
+macro_unidades:
+  antas:            # cascata CERAN inteira; preditor da onda do Antas
+    - 86472000
+  medio:            # incremental Muçum + Encantado
+    - 86510000
+    - 86720000
+  baixo:            # incremental Estrela + Porto Mariante + Taquari
+    - 86879300
+    - 86895000
+    - 86950000
+
+# Teto de "tempo desde a última ultrapassagem da cota de atenção" (horas).
+# 90 dias: além disso o valor não carrega informação hidrológica adicional.
+tempo_desde_atencao_cap_h: 2160
+
+# Janela da feature de disponibilidade de sensor (média de disp_nivel).
+disponibilidade_janela_h: 6

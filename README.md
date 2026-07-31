@@ -8,7 +8,7 @@ vazão defluente das usinas do rio das Antas.
 
 ## Estado atual
 
-**Fase 3 concluída** — delineamento e agregação espacial (reports/03_espacial.md). Ver
+**Fase 4 concluída** — features com justificativa física (reports/04_features.md). Ver
 `reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
 premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
 
