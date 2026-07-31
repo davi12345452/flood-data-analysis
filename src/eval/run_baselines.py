@@ -67,6 +67,17 @@ def run() -> None:
     pooled.to_parquet(PROCESSED / "baselines_pooled.parquet", index=False)
     extremos.to_parquet(PROCESSED / "baselines_extremos.parquet", index=False)
 
+    # Previsões em formato longo para a Fase 8 (hidrogramas, picos)
+    longos = []
+    for _, r in resultados.iterrows():
+        longos.append(pd.DataFrame({
+            "alvo": r["alvo"], "evento": r["evento"], "h": r["h"],
+            "variante": r["baseline"], "ts_utc": r["obs"].index,
+            "obs": r["obs"].values, "pred": r["pred"].values,
+        }))
+    pd.concat(longos, ignore_index=True).to_parquet(
+        PROCESSED / "preds_baselines.parquet", index=False)
+
     def tabela(df: pd.DataFrame) -> str:
         t = df.copy()
         for c in ("NSE", "KGE"):

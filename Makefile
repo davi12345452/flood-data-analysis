@@ -1,7 +1,7 @@
 # Pipeline reprodutível — cada alvo é idempotente (cache em data/raw/)
 .PHONY: all ingest ingest-ons ingest-ana ingest-sace ingest-merge-daily ingest-merge-events reference coverage qc qc-report spatial test
 
-all: ingest reference coverage qc qc-report spatial features dataset baselines
+all: ingest reference coverage qc qc-report spatial features dataset baselines model
 
 qc:
 	uv run python -m src.qc.ana
@@ -55,3 +55,6 @@ baselines:
 	uv run python -m src.eval.run_baselines
 	uv run python -m src.ingest.sace_forecasts
 	uv run python -m src.eval.sace_benchmark
+
+model:
+	uv run python -m src.eval.run_model

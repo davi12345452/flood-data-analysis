@@ -1,0 +1,24 @@
+# Fase 7 — LightGBM raso, regularização forte.
+# Racional: ~59 eventos de treino é POUCO; a validação é por evento e o
+# consenso do idea.md é "modelo pequeno". Profundidade e folhas baixas,
+# min_child_samples alto, subsample e L1/L2 agressivos.
+lgbm:
+  num_leaves: 15
+  max_depth: 5
+  min_child_samples: 120
+  learning_rate: 0.05
+  n_estimators: 600
+  reg_alpha: 0.5
+  reg_lambda: 5.0
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.8
+  verbosity: -1
+
+# Early stopping usa como validação as janelas cronologicamente FINAIS do
+# treino do fold (nunca o teste). Fração das janelas de treino:
+early_stopping_rounds: 50
+valid_frac_janelas: 0.15
+
+# Variante Armadilha 2: treino restrito a linhas com nível >= cota de atenção
+# da própria estação (o teste continua sendo o evento completo).

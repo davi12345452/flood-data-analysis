@@ -8,7 +8,7 @@ vazão defluente das usinas do rio das Antas.
 
 ## Estado atual
 
-**Fase 6 concluída** — quatro baselines avaliados em CV por evento (reports/06_baselines.md). Ver
+**Fase 7 concluída** — LightGBM raso vs baselines, veredito por horizonte (reports/07_modelo.md). Ver
 `reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
 premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
 
