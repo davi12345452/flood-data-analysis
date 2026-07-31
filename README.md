@@ -6,56 +6,80 @@ vazão defluente das usinas do rio das Antas.
 > **Este é um projeto de pesquisa pessoal. NÃO é um sistema de alerta oficial e nada aqui
 > deve ser usado para decisão de evacuação.** Ver `LIMITACOES.md`.
 
-## Estado atual
+## Estado: concluído (Fases 0–9)
 
-**Fase 8 concluída** — avaliação completa: detecção, picos, SACE pareado, hidrogramas (reports/08_avaliacao.md). Ver
-`reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
-premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
+**Resultado em uma linha:** regressão linear com lags bate tudo (inclusive a previsão
+oficial do SACE, pareada nas mesmas horas) em horizontes ≤6h; LightGBM raso vence em
+12–24h mas subestima picos recordes; o teto físico de ~12h com chuva observada é real
+e está medido.
+
+- **Síntese e balanço:** [`reports/final.md`](reports/final.md)
+- **Limitações medidas:** [`LIMITACOES.md`](LIMITACOES.md)
+- Trilha completa: `reports/00_fontes.md` → `08_avaliacao.md` (uma por fase),
+  figuras em `reports/figs/`.
+
+## Setup
+
+Requer [uv](https://docs.astral.sh/uv/) e, para o LightGBM/GRIB2 no macOS,
+`brew install libomp eccodes`:
+
+```bash
+uv sync --all-extras   # base + geo (xarray/cfgrib/geopandas) + ml (lightgbm) + dev
+```
 
 ## Uso
 
 ```bash
-make ingest     # baixa tudo o que falta (idempotente, ~2,1 GB na primeira vez)
-make reference  # extrai cotas de referência (data/reference/cotas_referencia.csv)
-make coverage   # regenera reports/01_cobertura.md a partir do cache
-make test       # pytest
+make all          # reconstrói todo o pipeline a partir do cache (ordem correta)
+make test         # 61 testes (QC, alinhamento temporal, zero-como-NaN, features...)
+
+# alvos individuais, na ordem do pipeline:
+make ingest       # download bruto (idempotente; ~12 GB na primeira vez)
+make reference    # cotas de referência (SACE×RIGEO, validação cruzada)
+make coverage     # relatório de cobertura por estação
+make qc qc-report # QC, fusos, grade horária UTC
+make spatial      # sub-bacias + agregação do MERGE
+make features     # pool de 77 features causais
+make dataset      # eventos + janelas + datasets supervisionados
+make baselines    # persistência, regressão, propagação, SACE
+make model        # LightGBM em CV por evento
+make evaluation   # detecção, picos, hidrogramas, SACE pareado
 ```
 
-## Setup
+Reexecutar qualquer alvo é seguro: tudo é cache-first e idempotente. Nenhum script de
+análise depende de rede depois do `make ingest`.
 
-Requer [uv](https://docs.astral.sh/uv/):
+## Credenciais da ANA (HidroWebService — opcional)
 
-```bash
-uv sync --extra dev        # base + testes
-uv sync --all-extras       # inclui geo (xarray/cfgrib/geopandas) e ml (lightgbm)
-```
-
-## Credenciais da ANA (HidroWebService)
-
-A API oficial da ANA exige credencial individual, solicitada por e-mail à ANA — ver o
-[manual do HidroWebService](https://www.gov.br/ana/pt-br/assuntos/monitoramento-e-eventos-criticos/monitoramento-hidrologico/orientacoes-manuais/manuais/manual-hidrowebservice_publica.pdf).
-Com a credencial em mãos, crie um `.env` na raiz (não versionado):
+O projeto funciona sem credencial (fonte primária: webservice SOAP legado, aberto).
+A API oficial exige credencial individual solicitada por e-mail — ver o
+[manual do HidroWebService](https://www.gov.br/ana/pt-br/assuntos/monitoramento-e-eventos-criticos/monitoramento-hidrologico/orientacoes-manuais/manuais/manual-hidrowebservice_publica.pdf)
+e o rascunho pronto em `reports/email_ana_credencial.md`. Com a credencial, crie um
+`.env` na raiz (não versionado):
 
 ```
 ANA_IDENTIFICADOR=...
 ANA_SENHA=...
 ```
 
-A API legada do HidroWeb (sem token) **foi desativada** — verificado em 2026-07-28; toda a
-árvore `/hidroweb/rest/api/` devolve 401.
+O cliente (`src/ingest/ana_hws.py`) liga sozinho quando o `.env` existe. A API legada
+REST do HidroWeb **foi desativada** (verificado em 2026-07-28: 401 em toda a árvore
+`/hidroweb/rest/api/`).
 
 ## Estrutura
 
 ```
 data/raw/        download bruto + .meta.json de proveniência, nunca editado
-data/interim/    pós-QC
-data/processed/  dataset supervisionado final
-data/reference/  cotas de referência, shapefiles, metadados de estações
-src/ingest/      um módulo por fonte (ana, cemaden, merge, ons, sace)
-src/qc/          controle de qualidade e alinhamento temporal
-src/features/    engenharia de features
-src/models/      baselines e modelo
-src/eval/        métricas e relatórios
-config/          estações, janelas e horizontes em YAML
-reports/         relatórios por fase
+data/interim/    pós-QC (grade horária UTC) e chuva agregada por sub-bacia
+data/processed/  features, datasets supervisionados, previsões por fold
+data/reference/  cotas de referência, sub-bacias (GPKG), coordenadas
+src/ingest/      um módulo por fonte (ana_soap, ana_hws, ons, merge, sace...)
+src/qc/          flags, fusos e alinhamento temporal
+src/spatial/     delineamento e agregação espacial
+src/features/    engenharia de features (causalidade testada)
+src/dataset/     eventos, janelas e montagem supervisionada
+src/models/      baselines e LightGBM
+src/eval/        métricas, CV por evento, figuras e relatórios
+config/          estações, janelas, horizontes e hiperparâmetros em YAML
+reports/         relatórios por fase + final.md
 ```
