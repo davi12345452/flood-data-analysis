@@ -1,0 +1,19 @@
+# Parâmetros de QC — Fase 2
+# Limiar de salto: máximo observado nos eventos de 2023/24 foi 77 cm de subida
+# em 15 min (José Júlio); 200 dá folga de ~3x sem deixar passar teletransporte.
+spike_max_cm_15min: 200
+
+# Nível idêntico (ao cm) por 24 passos de 15 min (6h) é suspeito de sensor
+# travado. É marcação, não remoção: regime baixo pode ser legitimamente estável.
+stuck_min_steps_nivel: 24
+
+# Fuso assumido para ANA SOAP e ONS: UTC-3 FIXO (sem horário de verão).
+# Evidências em reports/02_qc.md. Horas em que o horário oficial de São Paulo
+# estava em DST (até fev/2019) são marcadas com flag_dst_incerto (+-1h).
+tz_fixo_horas: -3
+
+# Rompimento parcial da UHE 14 de Julho (Armadilha 6): operação anômala.
+rompimento_14julho:
+  usina: "14 DE JULHO"
+  inicio: "2024-05-01"
+  fim: "2024-12-31"

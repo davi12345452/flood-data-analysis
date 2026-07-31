@@ -1,7 +1,14 @@
 # Pipeline reprodutível — cada alvo é idempotente (cache em data/raw/)
-.PHONY: all ingest ingest-ons ingest-ana ingest-sace ingest-merge-daily ingest-merge-events reference coverage test
+.PHONY: all ingest ingest-ons ingest-ana ingest-sace ingest-merge-daily ingest-merge-events reference coverage qc qc-report test
 
-all: ingest reference coverage
+all: ingest reference coverage qc qc-report
+
+qc:
+	uv run python -m src.qc.ana
+	uv run python -m src.qc.ons
+
+qc-report:
+	uv run python -m src.qc.report
 
 ingest: ingest-ons ingest-ana ingest-sace ingest-merge-daily ingest-merge-events
 

@@ -8,7 +8,7 @@ vazão defluente das usinas do rio das Antas.
 
 ## Estado atual
 
-**Fase 1 concluída** — ingestão com cache, retry e proveniência. Ver
+**Fase 2 concluída** — QC e alinhamento temporal (data/interim/, reports/02_qc.md). Ver
 `reports/01_cobertura.md` (gerado) e `reports/01_notas_ingestao.md` (decisões e
 premissas corrigidas). Fases anteriores: `reports/00_fontes.md`, `reports/00b_desbloqueio.md`.
 
