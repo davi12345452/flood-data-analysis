@@ -3,7 +3,7 @@ name = "flood-data-analysis"
 version = "1.0.0"
 description = "Pipeline aberto de dados e previsão de cota do rio Taquari (RS) — pesquisa pessoal, NÃO é sistema de alerta"
 license = { file = "LICENSE" }
-authors = [{ name = "Davi Janisch Maia", email = "[e-mail removido do histórico]" }]
+authors = [{ name = "Davi Janisch Maia" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "eccodes>=2.47.0",

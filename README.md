@@ -96,7 +96,7 @@ dataset → baselines → model → evaluation` (ver `Makefile`).
 O projeto funciona sem credencial (fonte primária: webservice SOAP legado da
 ANA, aberto). Para a API oficial HidroWebService, solicite credencial por
 e-mail ([manual](https://www.gov.br/ana/pt-br/assuntos/monitoramento-e-eventos-criticos/monitoramento-hidrologico/orientacoes-manuais/manuais/manual-hidrowebservice_publica.pdf);
-rascunho pronto em `reports/email_ana_credencial.md`) e crie um `.env`:
+modelo de e-mail em `reports/email_ana_credencial.md`) e crie um `.env`:
 
 ```
 ANA_IDENTIFICADOR=...
@@ -147,5 +147,5 @@ tratada como observação de vazão, nunca como variável de controle.
 
 ---
 
-*Projeto pessoal de [Davi Janisch Maia](mailto:[e-mail removido do histórico]). Contribuições e
-correções são bem-vindas — especialmente de quem conhece a bacia.*
+*Projeto pessoal de Davi Janisch Maia. Contribuições e correções são
+bem-vindas via issues e pull requests — especialmente de quem conhece a bacia.*

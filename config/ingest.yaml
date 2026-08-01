@@ -37,5 +37,5 @@ rigeo:
   cotas_pdf_url: "https://rigeo.sgb.gov.br/bitstream/doc/24429/1/cotas_sace_taquari_mucum_artigo.pdf"
 
 http:
-  user_agent: "flood-data-analysis/0.1 (pesquisa pessoal; [e-mail removido do histórico])"
+  user_agent: "flood-data-analysis/1.0 (projeto aberto de pesquisa; contato via issues no GitHub)"
   timeout_s: 120
