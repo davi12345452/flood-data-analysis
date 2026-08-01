@@ -29,7 +29,7 @@ def load_config(name: str) -> dict:
 
 
 def utcnow_iso() -> str:
-    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    return dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
 
 
 def make_client(timeout_s: float | None = None) -> httpx.Client:

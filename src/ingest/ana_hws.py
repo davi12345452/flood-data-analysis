@@ -9,11 +9,8 @@ from __future__ import annotations
 
 import datetime as dt
 import os
-from pathlib import Path
 
-import httpx
-
-from .common import ROOT, load_config, make_client
+from .common import ROOT, make_client
 
 BASE_URL = "https://www.ana.gov.br/hidrowebservice"
 
@@ -57,10 +54,10 @@ class HidroWebServiceClient:
         resp.raise_for_status()
         self._token = resp.json()["items"]["tokenautenticacao"]
         # Renova com folga de 5 min sobre a validade de 60.
-        self._token_expira = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=55)
+        self._token_expira = dt.datetime.now(dt.UTC) + dt.timedelta(minutes=55)
 
     def _headers(self) -> dict:
-        agora = dt.datetime.now(dt.timezone.utc)
+        agora = dt.datetime.now(dt.UTC)
         if self._token is None or self._token_expira is None or agora >= self._token_expira:
             self._autenticar()
         return {"Authorization": f"Bearer {self._token}"}

@@ -111,7 +111,7 @@ def calcular_pesos(da: xr.DataArray, unidades: gpd.GeoDataFrame) -> pd.DataFrame
     return df
 
 
-def agregar_arquivo(caminho: Path, cache: "PesosPorGrade") -> dict[int, float] | None:
+def agregar_arquivo(caminho: Path, cache: PesosPorGrade) -> dict[int, float] | None:
     try:
         da = abrir_precip(caminho)
         if da.dims != ("latitude", "longitude"):
@@ -129,7 +129,7 @@ def agregar_arquivo(caminho: Path, cache: "PesosPorGrade") -> dict[int, float] |
     return out
 
 
-def processar_diarios(cache: "PesosPorGrade") -> None:
+def processar_diarios(cache: PesosPorGrade) -> None:
     arquivos = sorted(
         list((RAW / "merge" / "daily_hist").rglob("*.grib2"))
         + list((RAW / "merge" / "daily").rglob("*.grib2"))
@@ -165,7 +165,7 @@ def processar_diarios(cache: "PesosPorGrade") -> None:
         (INTERIM_MERGE / "ilegiveis_diaria.txt").write_text("\n".join(ilegiveis) + "\n")
 
 
-def processar_horarios(cache: "PesosPorGrade") -> None:
+def processar_horarios(cache: PesosPorGrade) -> None:
     eventos = load_config("ingest")["janelas_eventos"]
     destino = INTERIM_MERGE / "horaria"
     destino.mkdir(parents=True, exist_ok=True)
@@ -198,7 +198,7 @@ def processar_horarios(cache: "PesosPorGrade") -> None:
         (INTERIM_MERGE / "ilegiveis_horaria.txt").write_text("\n".join(ilegiveis) + "\n")
 
 
-def processar_janelas(cache: "PesosPorGrade", caminho_json: Path,
+def processar_janelas(cache: PesosPorGrade, caminho_json: Path,
                       margem_h: int = 120) -> None:
     """Agrega o horário das janelas amostradas da Fase 5 (eventos + normais).
 

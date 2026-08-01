@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.dataset.build import colunas_do_subconjunto, montar_alvo
 

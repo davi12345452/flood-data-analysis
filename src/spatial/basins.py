@@ -20,7 +20,7 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
 
-from ..ingest.common import RAW, REFERENCE, load_config, make_client, write_meta
+from ..ingest.common import RAW, REFERENCE, make_client, write_meta
 
 HYBAS_URL = "https://data.hydrosheds.org/file/HydroBASINS/standard/hybas_sa_lev08_v1c.zip"
 HYBAS_DIR = RAW / "hydrosheds"

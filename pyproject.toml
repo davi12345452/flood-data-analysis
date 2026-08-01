@@ -1,7 +1,9 @@
 [project]
 name = "flood-data-analysis"
-version = "0.1.0"
-description = "Modelo de previsão de cota de cheia no Vale do Taquari (RS) — projeto de pesquisa pessoal, NÃO é sistema de alerta"
+version = "1.0.0"
+description = "Pipeline aberto de dados e previsão de cota do rio Taquari (RS) — pesquisa pessoal, NÃO é sistema de alerta"
+license = { file = "LICENSE" }
+authors = [{ name = "Davi Janisch Maia", email = "[e-mail removido do histórico]" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "eccodes>=2.47.0",
@@ -41,3 +43,16 @@ packages = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    # Datas "hoje"/rótulos de arquivo são deliberadamente naïve: o projeto
+    # localiza fusos numa única fronteira explícita (Fase 2) e usa a data
+    # local para particionar downloads.
+    "DTZ001", "DTZ007", "DTZ011",
+    # Ingestão tolera falha por item de propósito (registra e segue) —
+    # engolir silenciosamente seria o problema, e não é o caso: tudo loga.
+    "BLE001",
+    # pd.Timedelta é imutável; como default de argumento é seguro.
+    "B008",
+]

@@ -50,7 +50,7 @@ def estimar_tempo_viagem(train: pd.DataFrame, codigo: int,
     alvo = train[f"nivel_{PROPRIA[codigo]}"]
     montante = train[f"nivel_{MONTANTE[codigo]}"]
     melhor, melhor_r = 1, -np.inf
-    for lag in range(0, max_lag_h + 1):
+    for lag in range(max_lag_h + 1):
         r = alvo.corr(montante.shift(lag))
         if pd.notna(r) and r > melhor_r:
             melhor, melhor_r = lag, r

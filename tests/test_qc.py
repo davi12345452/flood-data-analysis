@@ -1,7 +1,6 @@
 """Testes de QC: flags, regra zero-como-NaN e alinhamento temporal."""
 
 import pandas as pd
-import pytest
 
 from src.qc import flags
 from src.qc.ana import para_grade_horaria, qc_15min

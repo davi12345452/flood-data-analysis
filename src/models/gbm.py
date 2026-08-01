@@ -10,7 +10,6 @@
 from __future__ import annotations
 
 import lightgbm as lgb
-import numpy as np
 import pandas as pd
 
 from ..ingest.common import REFERENCE, load_config

@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ..ingest.common import ROOT, load_config
+from ..ingest.common import ROOT
 
 INTERIM = ROOT / "data" / "interim"
 

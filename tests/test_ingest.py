@@ -3,7 +3,6 @@
 import datetime as dt
 
 import pandas as pd
-import pytest
 
 from src.ingest.ana_soap import parse_dados_xml
 from src.ingest.common import is_cached, is_partial, month_ranges, write_parquet

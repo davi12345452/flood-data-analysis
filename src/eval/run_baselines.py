@@ -57,8 +57,8 @@ def agregar(resultados: pd.DataFrame, so_eventos: list[str] | None = None) -> pd
 def run() -> None:
     horizontes = load_config("dataset")["horizontes_h"]
     todos = []
-    for codigo in NOMES:
-        print(f"[baselines] avaliando {NOMES[codigo]}...", flush=True)
+    for codigo, nome in NOMES.items():
+        print(f"[baselines] avaliando {nome}...", flush=True)
         todos.append(avaliar_alvo(codigo, horizontes))
     resultados = pd.concat(todos, ignore_index=True)
 

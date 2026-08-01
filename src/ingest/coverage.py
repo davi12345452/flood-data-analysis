@@ -9,7 +9,6 @@ Armadilha 0 eles são falha de sensor, não medição.
 from __future__ import annotations
 
 import datetime as dt
-from pathlib import Path
 
 import pandas as pd
 
@@ -117,7 +116,7 @@ def _tabela(df: pd.DataFrame) -> str:
 
 def run() -> None:
     ana, ons, mrg, sace = cobertura_ana(), cobertura_ons(), cobertura_merge(), cobertura_sace()
-    gerado = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    gerado = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     corpo = f"""# Fase 1 — Relatório de cobertura
 
 Gerado em {gerado} a partir do cache local (`data/raw/`). Reexecutável com

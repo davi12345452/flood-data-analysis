@@ -65,7 +65,7 @@ def resumo_ons(ons: pd.DataFrame) -> pd.DataFrame:
 def run() -> None:
     ana = pd.read_parquet(INTERIM / "ana_hourly.parquet")
     ons = pd.read_parquet(INTERIM / "ons_hourly.parquet")
-    gerado = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    gerado = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
 
     corpo = f"""# Fase 2 — QC e alinhamento temporal
 

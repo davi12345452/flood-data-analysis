@@ -17,7 +17,15 @@ import time
 
 import pandas as pd
 
-from .common import RAW, get, is_cached, is_partial, load_config, make_client, write_meta, write_parquet
+from .common import (
+    RAW,
+    get,
+    is_cached,
+    is_partial,
+    load_config,
+    make_client,
+    write_meta,
+)
 
 
 def fetch_catalog(client, ckan_base: str, dataset: str) -> list[dict]:
