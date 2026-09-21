@@ -52,6 +52,17 @@ Análise completa em [`reports/09_julho2026.md`](reports/09_julho2026.md).
 **Este é o formato do que vem a seguir: cada nova cheia ganha uma página como
 esta — previsto × ocorrido, publicado.**
 
+## Rodada ao vivo: 21/09/2026
+
+Primeira estimativa emitida *durante* um evento, com os erros medidos na hora
+em vez de depois: [`reports/10_setembro2026.md`](reports/10_setembro2026.md).
+Resultado desconfortável e por isso publicado — **o modelo subestimou em 100%
+das previsões conferíveis** (viés de −24 a −739 cm), porque a velocidade de
+subida ficou no percentil 99,98+ do treino. E o h=24 não foi entregue: o MERGE
+tem ~5 h de latência, de modo que o GBM roda cego justamente nas horas que
+importam. Detalhe que só um run ao vivo revela — em modo retrospectivo todas
+as fontes parecem igualmente disponíveis.
+
 ## O que tem aqui
 
 ```
