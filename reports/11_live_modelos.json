@@ -1,0 +1,67 @@
+{
+  "protocolo": "cronologico_latencia_v1",
+  "atrasos_h": {
+    "chuva": 5,
+    "ons": 1,
+    "api": 24,
+    "disponibilidade": 1
+  },
+  "selecao": "eventos 2023–2025; MAE médio por evento no regime alto",
+  "teste": "eventos 2026, sem escolher modelo com estes resultados",
+  "modelos": [
+    {
+      "codigo": 86510000,
+      "h": 6,
+      "motor": "gbm_delta",
+      "mae_selecao_cm": 45.3718146856076
+    },
+    {
+      "codigo": 86510000,
+      "h": 9,
+      "motor": "gbm_delta",
+      "mae_selecao_cm": 75.61080230613058
+    },
+    {
+      "codigo": 86510000,
+      "h": 12,
+      "motor": "gbm_delta",
+      "mae_selecao_cm": 98.72340211350443
+    },
+    {
+      "codigo": 86720000,
+      "h": 6,
+      "motor": "linear",
+      "mae_selecao_cm": 45.072355250929334
+    },
+    {
+      "codigo": 86720000,
+      "h": 9,
+      "motor": "gbm_delta",
+      "mae_selecao_cm": 66.6587756528688
+    },
+    {
+      "codigo": 86720000,
+      "h": 12,
+      "motor": "gbm_delta",
+      "mae_selecao_cm": 116.05767393164524
+    },
+    {
+      "codigo": 86879300,
+      "h": 6,
+      "motor": "linear",
+      "mae_selecao_cm": 33.91132033638403
+    },
+    {
+      "codigo": 86879300,
+      "h": 9,
+      "motor": "linear",
+      "mae_selecao_cm": 55.19217990283306
+    },
+    {
+      "codigo": 86879300,
+      "h": 12,
+      "motor": "linear",
+      "mae_selecao_cm": 83.52031364417823
+    }
+  ]
+}

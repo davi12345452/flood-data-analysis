@@ -12,10 +12,41 @@ import datetime as dt
 
 import pandas as pd
 
-from ..ingest.common import RAW, ROOT
+from ..ingest import merge
+from ..ingest.common import RAW, ROOT, load_config, make_client
 from ..spatial.merge_agg import RE_DIA, RE_HORA, PesosPorGrade, agregar_arquivo
 
 INTERIM_MERGE = ROOT / "data" / "interim" / "merge"
+
+
+def baixar_recentes(agora: pd.Timestamp | None = None, dias: int = 8) -> None:
+    """Atualiza a janela recente antes de agregar, respeitando o cache.
+
+    404 de horas ainda não publicadas fica registrado como ausência da fonte.
+    Reconhece tanto o cache mensal do pipeline quanto o diário do primeiro live.
+    """
+    agora = agora if agora is not None else pd.Timestamp.now(tz="UTC")
+    if agora.tzinfo is None or dias < 1:
+        raise ValueError("Informe timestamp com fuso e ao menos um dia.")
+    agora = agora.tz_convert("UTC").floor("h")
+    cfg = load_config("ingest")["merge"]
+    faltantes = []
+    baixados = 0
+    with make_client() as client:
+        for ts in pd.date_range(agora - pd.Timedelta(days=dias), agora, freq="h"):
+            mensal = RAW / "merge/hourly" / f"{ts:%Y/%m}" / f"MERGE_CPTEC_{ts:%Y%m%d%H}.grib2"
+            diario = mensal.parent / f"{ts:%d}" / mensal.name
+            dest = diario if diario.exists() else mensal
+            baixados += int(merge._baixar(client, merge.url_hourly(cfg["base_url"], ts),
+                                         dest, cfg["pausa_s"], faltantes))
+        for dia in pd.date_range(agora.normalize() - pd.Timedelta(days=dias),
+                                 agora.normalize(), freq="D"):
+            if dia + pd.Timedelta(hours=12) > agora:
+                continue  # período diário ainda não encerrado
+            dest = RAW / "merge/daily" / f"{dia:%Y}" / f"MERGE_CPTEC_{dia:%Y%m%d}.grib2"
+            baixados += int(merge._baixar(client, merge.url_daily(cfg["base_url"], dia),
+                                         dest, cfg["pausa_s"], faltantes))
+    merge._reportar("live", baixados, faltantes)
 
 
 def horaria_live(desde: pd.Timestamp) -> pd.Timestamp:

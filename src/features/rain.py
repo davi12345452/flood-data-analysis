@@ -14,6 +14,21 @@ from ..ingest.common import ROOT, load_config
 INTERIM_MERGE = ROOT / "data" / "interim" / "merge"
 
 
+def acumulados_posto(g: pd.DataFrame, apelido: str) -> pd.DataFrame:
+    """Chuva local ANA: somente horas completas, encerradas antes de t.
+
+    Não substitui chuva média de bacia. Exige as quatro leituras de 15 min
+    e não transforma ausência em zero. A hora t, possivelmente parcial, é
+    excluída de todos os acumulados. Latência de transmissão não é medida.
+    """
+    g = g.set_index("ts_utc").sort_index()
+    grade = pd.date_range(g.index.min(), g.index.max(), freq="h")
+    g = g.reindex(grade)
+    chuva = g.chuva_mm.astype(float).where(g.chuva_n == 4)
+    return pd.DataFrame({f"posto_{apelido}_{h}h": chuva.rolling(h, min_periods=h).sum().shift(1)
+                         for h in (1, 3, 6, 12, 24)}, index=grade)
+
+
 def carregar_macro_horaria() -> pd.DataFrame:
     """Chuva horária por macro-unidade (média das sub-bacias ponderada por
     área incremental), nas janelas em que o MERGE horário existe."""

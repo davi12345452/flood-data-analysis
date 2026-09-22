@@ -50,6 +50,7 @@ def montar() -> pd.DataFrame:
         )
         bloco.columns = [f"{c}_{apelido}" for c in bloco.columns]
         blocos.append(bloco)
+        blocos.append(rain.acumulados_posto(g, apelido))
 
     # 3. UHEs
     blocos.append(dams.features_uhes(dams.carregar_ons()))

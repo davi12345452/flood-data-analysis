@@ -24,11 +24,14 @@ Este repositório junta tudo em um pipeline auditável e responde, com números:
 
 ## A resposta curta
 
+Resultados da validação retrospectiva original (Fases 6–8). Para estimativas
+com latência de fontes, consulte a revisão de setembro abaixo.
+
 | Horizonte | Melhor modelo | Qualidade (Muçum, NSE) | Observação |
 |---|---|---|---|
 | **3–6h** | regressão linear com lags de montante | 0,99 / 0,98 | **bate a previsão oficial pareada nas mesmas horas** (MAE 17,6 vs 46,8 cm) |
 | **12–24h** | LightGBM raso | 0,94 / 0,78 | mas subestima picos *recordes* em até 6 m — árvore não extrapola |
-| **>24h** | — | NSE 0,24–0,58 no regime de cheia | **teto físico**: sem chuva *prevista*, não há sinal |
+| **24h, em cheia** | LightGBM | NSE 0,24–0,58 | desempenho baixo nesta validação; não estabelece um teto físico universal |
 
 E o detalhe que mais importa e menos aparece em papers: **os sensores falham
 preferencialmente nos picos**. Nos três grandes eventos, só 65–68% das horas
@@ -56,12 +59,28 @@ esta — previsto × ocorrido, publicado.**
 
 Primeira estimativa emitida *durante* um evento, com os erros medidos na hora
 em vez de depois: [`reports/10_setembro2026.md`](reports/10_setembro2026.md).
-Resultado desconfortável e por isso publicado — **o modelo subestimou em 100%
-das previsões conferíveis** (viés de −24 a −739 cm), porque a velocidade de
-subida ficou no percentil 99,98+ do treino. E o h=24 não foi entregue: o MERGE
-tem ~5 h de latência, de modo que o GBM roda cego justamente nas horas que
-importam. Detalhe que só um run ao vivo revela — em modo retrospectivo todas
-as fontes parecem igualmente disponíveis.
+O replay das horas anteriores subestimou **55 de 60 pares (91,7%)**, com viés
+médio de −24 a −739 cm por estação/horizonte. A subida ficou no percentil
+99,98+ do treino, mas sua contribuição para o erro não foi isolada. A versão
+original recuava também as cotas para acompanhar o MERGE atrasado em 5h;
+o h=12 tinha só 7h de antecedência restante às 18h. Não havia evidência para
+declarar um teto útil de 6h.
+
+A revisão prevê **3, 6, 9 e 12h desde a mesma referência de cota**, com
+atrasos por fonte também no treino. A escolha entre linear, GBM nível e GBM
+de variação usa eventos de 2023–2025; eventos de 2026 ficam separados para
+teste. Resultados e limitações: [`reports/11_validacao_live.md`](reports/11_validacao_live.md).
+Estimativas revisadas da referência das 18h e erros no evento:
+[`reports/live_ultima_rodada.md`](reports/live_ultima_rodada.md).
+
+Na rodada seguinte de desenvolvimento, o modelo com mais réguas a montante
+reduziu o MAE de Encantado em 6h de **46,1 para 28,9 cm** no conjunto de
+aceitação de 2026, em regime alto. Chuva de postos ANA e correção por erros
+recentes foram testadas, mas não promovidas onde pioraram a comparação.
+O sistema agora calcula faixas empíricas, suspende sua publicação quando
+faltam exemplos ou a cobertura recente cai, e confere emissões reais
+arquivadas separadamente de replays. Resultados completos e candidatos
+rejeitados: [`reports/12_melhoria_live.md`](reports/12_melhoria_live.md).
 
 ## O que tem aqui
 
@@ -75,8 +94,8 @@ as fontes parecem igualmente disponíveis.
                  com flag · nenhuma interpolação de lacuna, nunca
 🗺️  Espacial      bacias de contribuição por estação (HydroBASINS lev8; Muçum
                  validada a +0,1% da área oficial) · chuva média por sub-bacia
-🧮 Features      77 features causais (acumulados 1-120h, API, derivadas de cota,
-                 defluência, disponibilidade de sensor) — causalidade TESTADA
+🧮 Features      77 features de base + 35 acumulados de chuva de postos ANA
+                 (horas completas, sem preencher lacunas) — causalidade TESTADA
 🎯 Dataset       59 eventos (2018-2026) + janelas normais · rótulos em 3/6/12/24h
                  para Muçum, Encantado e Estrela/Lajeado
 📊 Avaliação     validação cruzada POR EVENTO (o extremo avaliado nunca está no
@@ -95,12 +114,30 @@ Requisitos: [uv](https://docs.astral.sh/uv/); no macOS, `brew install libomp ecc
 ```bash
 uv sync --all-extras
 make all    # reconstrói tudo do cache (~12 GB no primeiro make ingest)
-make test   # 61 testes: QC, fusos, zero-como-NaN, causalidade de features
+make test   # QC, fusos, causalidade, latências e registro de previsões
 ```
 
 Cada alvo é idempotente e cache-first; após `make ingest`, nada depende de
 rede. Alvos individuais: `ingest → reference → qc → spatial → features →
 dataset → baselines → model → evaluation` (ver `Makefile`).
+
+Para a revisão de 6–12h:
+
+```bash
+uv run python -m src.live.evaluate          # valida e escolhe por evento passado
+uv run python -m src.live.improve           # compara candidatos e calibra faixas
+uv run python -m src.live.run --sem-atualizar # replay com o cache existente
+uv run python -m src.live.run               # atualiza ANA/ONS e baixa MERGE recente
+```
+
+Cada execução guarda entradas, configuração, código e resultados em
+`data/processed/live_runs/`. Replay não recebe horário de emissão; execução
+com atualização registra emissão real e antecedência restante. O MERGE recente
+é baixado antes da agregação; arquivos ainda não publicados ficam registrados
+como ausentes, sem preenchimento.
+`reports/12_live_modelos.json`, quando presente, define a política mais recente;
+reexecute `src.live.improve` após refazer a validação base. Nenhuma rotina
+promove um candidato apenas por melhorar o evento de setembro.
 
 ### Credencial da ANA (opcional)
 
@@ -136,7 +173,7 @@ ANA_SENHA=...
 - [ ] **Página de eventos**: a cada nova cheia, publicar previsto × ocorrido
       no formato do estudo de julho/2026 (hidrograma + tabela de erros)
 - [ ] Atualização contínua da ingestão (o pipeline já é incremental)
-- [ ] Chuva prevista (ETA/BRAMS ou GFS/ECMWF) — única forma de romper o teto de ~12h
+- [ ] Chuva prevista (ETA/BRAMS ou GFS/ECMWF) — avaliar ganho em horizontes longos
 - [ ] Modelo híbrido para picos (GBM sobre resíduo do linear) — ataca o viés em recordes
 - [ ] Previsão por quantis (banda de incerteza em vez de número seco)
 - [ ] CEMADEN (pluviômetros de 10 min) via fluxo de e-mail
