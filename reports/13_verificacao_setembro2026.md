@@ -48,6 +48,8 @@ Gerada em 21/09 19:07 local. A antecedência real desconta o tempo entre a obser
 | Muçum     | gbm     |  12 | 21/09 13:00        | 22/09 01:00      |                   5.9 |        1549.6 | 2288.1         | 1810.0         | -260.4    | 478.1               | conferido |
 | Muçum     | gbm     |  24 | 21/09 13:00        | 22/09 13:00      |                  17.9 |        1421   | —              | —              | —         | —                   | pendente  |
 
+![18h original × observado](figs/emissao_20260921_1907_vs_observado.png)
+
 ## 18h revisada (replay 19:27)
 
 Gerada em 21/09 19:27 local. Este bloco é um replay gerado com cache depois da referência; não conta como emissão, está aqui porque foi publicado. A antecedência real desconta o tempo entre a observação de referência e a gravação do número.
@@ -86,6 +88,8 @@ Gerada em 21/09 21:22 local. A antecedência real desconta o tempo entre a obser
 | Muçum     | gbm_delta      |   9 | 21/09 21:00        | 22/09 06:00      |                   8.6 | 1550.7        | 1836.0         | -285.3    | conferido   |
 | Muçum     | gbm_delta      |  12 | 21/09 21:00        | 22/09 09:00      |                  11.6 | 1397.0        | —              | —         | pendente    |
 
+![21/09 21h (emissão) × observado](figs/emissao_20260921_2122_vs_observado.png)
+
 ## 22/09 07h (emissão)
 
 Gerada em 22/09 07:33 local. A antecedência real desconta o tempo entre a observação de referência e a gravação do número.
@@ -104,6 +108,8 @@ Gerada em 22/09 07:33 local. A antecedência real desconta o tempo entre a obser
 | Muçum     | gbm_delta      |   6 | 22/09 07:00        | 22/09 13:00      |                   5.4 | 1602.5        | —              | —         | pendente    |
 | Muçum     | gbm_delta      |   9 | 22/09 07:00        | 22/09 16:00      |                   8.4 | 1487.0        | —              | —         | pendente    |
 | Muçum     | gbm_delta      |  12 | 22/09 07:00        | 22/09 19:00      |                  11.4 | 1419.8        | —              | —         | pendente    |
+
+![22/09 07h (emissão) × observado](figs/emissao_20260922_0733_vs_observado.png)
 
 ## Leitura
 

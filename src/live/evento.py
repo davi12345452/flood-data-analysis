@@ -165,6 +165,64 @@ def figura(pares: pd.DataFrame, frame: pd.DataFrame, agora: pd.Timestamp):
     return destino
 
 
+def figura_emissao(pares: pd.DataFrame, frame: pd.DataFrame, emissao: str,
+                   agora: pd.Timestamp):
+    """Uma emissão contra o observado, com o erro anotado em cada validade."""
+    cotas = pd.read_csv(REFERENCE / "cotas_referencia.csv").set_index("codigo")
+    loc = lambda s: s.tz_convert(TZ_LOCAL)
+    g_em = pares[(pares["emissao"] == emissao) & pares["previsto_cm"].notna()]
+    if g_em.empty:
+        return None
+    t0 = g_em["t_ref_utc"].min()
+    emitido = g_em["emitido_em_utc"].iloc[0]
+    inicio = t0 - pd.Timedelta(hours=6)
+    fim = max(agora, g_em["valido_para_utc"].max())
+
+    fig, axes = plt.subplots(3, 1, figsize=(10, 10.5), sharex=True, constrained_layout=True)
+    for ax, (codigo, (nome, ap)) in zip(axes, ALVOS.items()):
+        s = frame.loc[inicio:agora, f"nivel_{ap}"].dropna()
+        ax.plot(loc(s.index), s.values, color=OBS, linewidth=2.4, label="observado (ANA)")
+        g = g_em[g_em["alvo"] == nome].sort_values("h")
+        if not g.empty:
+            nivel0 = frame[f"nivel_{ap}"].get(g["t_ref_utc"].iloc[0], float("nan"))
+            xs = [g["t_ref_utc"].iloc[0]] + list(g["valido_para_utc"])
+            ys = [nivel0] + list(g["previsto_cm"])
+            ax.plot([loc(pd.Timestamp(x)) for x in xs], ys, color=LARANJA, linewidth=1.8,
+                    linestyle="--", marker="o", markersize=5, label=f"estimado: {emissao}")
+            for p in g.itertuples(index=False):
+                if pd.notna(p.observado_cm):
+                    x = loc(p.valido_para_utc)
+                    ax.plot([x, x], [p.previsto_cm, p.observado_cm], color="#b04a3a",
+                            linewidth=1, alpha=0.8)
+                    ax.annotate(f"{p.erro_cm:+.0f} cm", (x, (p.previsto_cm + p.observado_cm) / 2),
+                                xytext=(6, 0), textcoords="offset points", fontsize=7.5,
+                                color="#b04a3a", va="center")
+                else:
+                    ax.annotate("pendente", (loc(p.valido_para_utc), p.previsto_cm),
+                                xytext=(6, 0), textcoords="offset points", fontsize=7,
+                                color=TEXTO_2, va="center")
+        y = float(cotas.loc[codigo, "inundacao_cm"])
+        ax.axhline(y, color="#a8a7a1", linestyle="--", linewidth=1)
+        ax.annotate("inundação", (0.995, y), xycoords=("axes fraction", "data"),
+                    fontsize=7, color="#8a8984", ha="right", va="bottom")
+        ax.axvline(loc(emitido), color="#c9c8c2", linewidth=1)
+        ax.annotate("emitido", (loc(emitido), 0.02), xycoords=("data", "axes fraction"),
+                    fontsize=7, color="#8a8984", ha="left", va="bottom")
+        ax.set_title(nome, fontsize=10, color=TEXTO, loc="left")
+        ax.set_ylabel("cota (cm)", fontsize=8, color=TEXTO_2)
+        ax.legend(fontsize=8, frameon=False, loc="upper left")
+        _estilo(ax)
+    axes[-1].set_xlim(loc(inicio), loc(fim + pd.Timedelta(hours=1)))
+    axes[-1].set_xlabel("horário local (UTC−3)", fontsize=8, color=TEXTO_2)
+    fig.suptitle(f"Emissão de {loc(emitido):%d/%m %H:%M} × observado até {loc(agora):%d/%m %H:%M}",
+                 fontsize=12, color=TEXTO)
+    FIGS.mkdir(parents=True, exist_ok=True)
+    destino = FIGS / f"emissao_{loc(emitido):%Y%m%d_%H%M}_vs_observado.png"
+    fig.savefig(destino, dpi=150)
+    plt.close(fig)
+    return destino
+
+
 def _fmt(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     for col in df.columns:
@@ -177,7 +235,9 @@ def _fmt(df: pd.DataFrame) -> pd.DataFrame:
     return df.round(1).fillna("—")
 
 
-def relatorio(pares: pd.DataFrame, pico: pd.DataFrame, fig, agora: pd.Timestamp) -> None:
+def relatorio(pares: pd.DataFrame, pico: pd.DataFrame, fig, agora: pd.Timestamp,
+              figs_emissao: dict | None = None) -> None:
+    figs_emissao = figs_emissao or {}
     loc = agora.tz_convert(TZ_LOCAL)
     conf = pares[pares["status"] == "conferido"]
     emis = conf[conf["tipo"] == "emissao"]
@@ -219,9 +279,12 @@ def relatorio(pares: pd.DataFrame, pico: pd.DataFrame, fig, agora: pd.Timestamp)
                                          "valido_para_utc": "validade_local"})
         if tabela["corrigido_cm"].isna().all():
             tabela = tabela.drop(columns=["corrigido_cm", "erro_corrigido_cm"])
+        fig_em = figs_emissao.get(emissao)
+        imagem = f"![{emissao} × observado](figs/{fig_em.name})\n\n" if fig_em else ""
         partes.append(f"## {emissao}\n\nGerada em {emitido:%d/%m %H:%M} local.{aviso} "
                       "A antecedência real desconta o tempo entre a observação de referência "
-                      "e a gravação do número.\n\n" + _fmt(tabela).to_markdown(index=False) + "\n\n")
+                      "e a gravação do número.\n\n" + _fmt(tabela).to_markdown(index=False)
+                      + "\n\n" + imagem)
     partes.append(
         "## Leitura\n\n"
         "Os números acima são o registro. A interpretação, escrita depois de ver os "
@@ -241,8 +304,10 @@ def run(agora: pd.Timestamp | None = None):
     pares = parear(carregar_publicadas(), frame, agora)
     pico = picos(frame, agora)
     fig = figura(pares, frame, agora)
+    reais = pares.loc[pares["tipo"] == "emissao", "emissao"].unique()
+    figs_emissao = {e: figura_emissao(pares, frame, e, agora) for e in reais}
     pares.to_csv(ROOT / "reports/13_verificacao_pares.csv", index=False)
-    relatorio(pares, pico, fig, agora)
+    relatorio(pares, pico, fig, agora, figs_emissao)
     print(pares.to_string(index=False))
     print(pico.to_string(index=False))
     print(f"[evento] figura em {fig}; frame de {pastas[-1].parent.name}")
