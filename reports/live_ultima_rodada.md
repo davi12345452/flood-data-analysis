@@ -1,25 +1,23 @@
-# Revisão da rodada de 21/09/2026 21:00
+# Revisão da rodada de 22/09/2026 07:00
 
-Modo: **emissao**. Referência observada: 21/09 21:00 (UTC−3). Emissão registrada em 21/09/2026 21:22:09 local. A antecedência real desconta o tempo desde a observação.
+Modo: **emissao**. Referência observada: 22/09 07:00 (UTC−3). Emissão registrada em 22/09/2026 07:33:12 local. A antecedência real desconta o tempo desde a observação.
 
 Horizontes contados desde a referência da própria estação; chuva e ONS mantêm seus atrasos no treino e na inferência. Alterações de modelo passam por comparação por fase da cheia. A coluna de cota é uma estimativa pontual, não uma cota de pico. Não é sistema de alerta.
 
-**O fundamento histórico não comprova qualidade nesta subida.** Replay de 9h: Encantado: MAE 484 cm, n=7; Estrela: MAE 199 cm, n=7; Muçum: MAE 602 cm, n=7. Consulte também n em 12h: poucos pares não bastam para estimar qualidade neste evento. O desempenho histórico não é uma margem de erro válida para setembro. As previsões da referência das 21:00 ainda não têm observação futura neste cache.
-
 | alvo      | motor          |   h | referencia_local   |   observado_cm | previsto_cm   | validade_local   |   antecedencia_real_h | status              |
 |:----------|:---------------|----:|:-------------------|---------------:|:--------------|:-----------------|----------------------:|:--------------------|
-| Muçum     | linear         |   3 | 21/09 21:00        |           1585 | —             | 22/09 00:00      |                   2.6 | dados_insuficientes |
-| Muçum     | gbm_delta      |   6 | 21/09 21:00        |           1585 | 1627.7        | 22/09 03:00      |                   5.6 | estimativa          |
-| Muçum     | gbm_delta      |   9 | 21/09 21:00        |           1585 | 1550.7        | 22/09 06:00      |                   8.6 | estimativa          |
-| Muçum     | gbm_delta      |  12 | 21/09 21:00        |           1585 | 1397.0        | 22/09 09:00      |                  11.6 | estimativa          |
-| Encantado | linear         |   3 | 21/09 21:00        |           1313 | 1415.2        | 22/09 00:00      |                   2.6 | estimativa          |
-| Encantado | ridge_montante |   6 | 21/09 21:00        |           1313 | 1473.3        | 22/09 03:00      |                   5.6 | estimativa          |
-| Encantado | gbm_delta      |   9 | 21/09 21:00        |           1313 | 1368.6        | 22/09 06:00      |                   8.6 | estimativa          |
-| Encantado | gbm_delta      |  12 | 21/09 21:00        |           1313 | 1243.4        | 22/09 09:00      |                  11.6 | estimativa          |
-| Estrela   | linear         |   3 | 21/09 21:00        |           1989 | 2199.9        | 22/09 00:00      |                   2.6 | estimativa          |
-| Estrela   | linear         |   6 | 21/09 21:00        |           1989 | 2333.9        | 22/09 03:00      |                   5.6 | estimativa          |
-| Estrela   | linear         |   9 | 21/09 21:00        |           1989 | 2428.8        | 22/09 06:00      |                   8.6 | estimativa          |
-| Estrela   | linear         |  12 | 21/09 21:00        |           1989 | 2499.5        | 22/09 09:00      |                  11.6 | estimativa          |
+| Muçum     | linear         |   3 | 22/09 07:00        |           1802 | —             | 22/09 10:00      |                   2.4 | dados_insuficientes |
+| Muçum     | gbm_delta      |   6 | 22/09 07:00        |           1802 | 1602.5        | 22/09 13:00      |                   5.4 | estimativa          |
+| Muçum     | gbm_delta      |   9 | 22/09 07:00        |           1802 | 1487.0        | 22/09 16:00      |                   8.4 | estimativa          |
+| Muçum     | gbm_delta      |  12 | 22/09 07:00        |           1802 | 1419.8        | 22/09 19:00      |                  11.4 | estimativa          |
+| Encantado | linear         |   3 | 22/09 07:00        |           1631 | 1571.4        | 22/09 10:00      |                   2.4 | estimativa          |
+| Encantado | ridge_montante |   6 | 22/09 07:00        |           1631 | 1519.9        | 22/09 13:00      |                   5.4 | estimativa          |
+| Encantado | gbm_delta      |   9 | 22/09 07:00        |           1631 | 1419.9        | 22/09 16:00      |                   8.4 | estimativa          |
+| Encantado | gbm_delta      |  12 | 22/09 07:00        |           1631 | 1320.7        | 22/09 19:00      |                  11.4 | estimativa          |
+| Estrela   | linear         |   3 | 22/09 07:00        |           2400 | 2435.7        | 22/09 10:00      |                   2.4 | estimativa          |
+| Estrela   | linear         |   6 | 22/09 07:00        |           2400 | 2430.2        | 22/09 13:00      |                   5.4 | estimativa          |
+| Estrela   | linear         |   9 | 22/09 07:00        |           2400 | 2406.3        | 22/09 16:00      |                   8.4 | estimativa          |
+| Estrela   | linear         |  12 | 22/09 07:00        |           2400 | 2374.2        | 22/09 19:00      |                  11.4 | estimativa          |
 
 ## Faixas e diagnóstico
 
@@ -28,43 +26,52 @@ As faixas usam o quantil 90% dos erros de 2025, separado por regime, sem garanti
 | alvo      |   h | inferior_cm   | superior_cm   | faixa_status                   | cobertura_recente_pct   |   n_faixa_recente |
 |:----------|----:|:--------------|:--------------|:-------------------------------|:------------------------|------------------:|
 | Muçum     |   3 | —             | —             | faltam dados                   | —                       |                 0 |
-| Muçum     |   6 | —             | —             | erros recentes excedem a faixa | 20.0                    |                 5 |
-| Muçum     |   9 | —             | —             | erros recentes excedem a faixa | 0.0                     |                 6 |
-| Muçum     |  12 | —             | —             | erros recentes excedem a faixa | 0.0                     |                 6 |
+| Muçum     |   6 | 1555.9        | 1649.1        | empírica, sem garantia         | 83.3                    |                 6 |
+| Muçum     |   9 | —             | —             | erros recentes excedem a faixa | 60.0                    |                 5 |
+| Muçum     |  12 | —             | —             | erros recentes excedem a faixa | 33.3                    |                 3 |
 | Encantado |   3 | —             | —             | sem calibração                 | —                       |                 0 |
-| Encantado |   6 | —             | —             | erros recentes excedem a faixa | 50.0                    |                 6 |
-| Encantado |   9 | —             | —             | erros recentes excedem a faixa | 0.0                     |                 6 |
-| Encantado |  12 | —             | —             | erros recentes excedem a faixa | 0.0                     |                 6 |
+| Encantado |   6 | 1488.3        | 1551.5        | empírica, sem garantia         | 83.3                    |                 6 |
+| Encantado |   9 | 1367.0        | 1472.8        | empírica, sem garantia         | 100.0                   |                 4 |
+| Encantado |  12 | —             | —             | erros recentes excedem a faixa | 33.3                    |                 3 |
 | Estrela   |   3 | —             | —             | sem calibração                 | —                       |                 0 |
-| Estrela   |   6 | —             | —             | poucos exemplos neste regime   | 0.0                     |                 1 |
-| Estrela   |   9 | —             | —             | poucos exemplos neste regime   | 0.0                     |                 3 |
-| Estrela   |  12 | —             | —             | poucos exemplos neste regime   | 0.0                     |                 5 |
+| Estrela   |   6 | 2398.1        | 2462.4        | empírica, sem garantia         | —                       |                 0 |
+| Estrela   |   9 | 2354.7        | 2457.9        | empírica, sem garantia         | —                       |                 0 |
+| Estrela   |  12 | 2300.5        | 2447.8        | empírica, sem garantia         | —                       |                 0 |
 
-![Hidrograma revisado](figs/live_v3_20260922_00.png)
+![Hidrograma revisado](figs/live_v3_20260922_10.png)
 
 ## Replay da subida
 
-Referências a partir de 21/09 06:00; somente alvos já observados. Horizontes maiores têm menos pares. Ausência de linha significa ausência de pares, não erro zero.
+Referências a partir de 21/09 07:00; somente alvos já observados. Horizontes maiores têm menos pares. Ausência de linha significa ausência de pares, não erro zero.
 
 | alvo      |   h |   MAE_cm |   vies_cm |   n |
 |:----------|----:|---------:|----------:|----:|
-| Encantado |   3 |    104.2 |     -58.1 |  13 |
-| Encantado |   6 |    193.1 |    -160   |  10 |
-| Encantado |   9 |    483.6 |    -483.6 |   7 |
-| Encantado |  12 |    846   |    -846   |   4 |
-| Estrela   |   3 |     39.7 |     -23   |  13 |
-| Estrela   |   6 |     94.8 |     -94.8 |  10 |
-| Estrela   |   9 |    198.7 |    -198.7 |   7 |
-| Estrela   |  12 |    399   |    -399   |   4 |
-| Muçum     |   3 |    117.1 |     -86.1 |  13 |
-| Muçum     |   6 |    240.7 |    -240.7 |  10 |
-| Muçum     |   9 |    602.3 |    -602.3 |   7 |
-| Muçum     |  12 |    987   |    -987   |   4 |
+| Encantado |   3 |     71.3 |     -34.7 |  22 |
+| Encantado |   6 |    122.2 |     -28.8 |  19 |
+| Encantado |   9 |    257.2 |    -237.6 |  16 |
+| Encantado |  12 |    443   |    -429.1 |  13 |
+| Estrela   |   3 |     28.5 |     -10.4 |  22 |
+| Estrela   |   6 |     63.3 |     -40.8 |  19 |
+| Estrela   |   9 |    130.1 |    -104.5 |  16 |
+| Estrela   |  12 |    248.5 |    -218.7 |  13 |
+| Muçum     |   3 |     79.3 |     -30.8 |  22 |
+| Muçum     |   6 |    177   |     -41   |  19 |
+| Muçum     |   9 |    331.2 |    -236.4 |  16 |
+| Muçum     |  12 |    526.9 |    -469.9 |  13 |
 
 Os candidatos são escolhidos em 2023–2024, confirmados em 2025 e podem ser vetados por regressão em 2026. A comparação completa está em [melhoria e aceitação](12_melhoria_live.md). O replay assume atrasos fixos e não recompõe a publicação real de cada fonte.
 
-Arquivo local da execução: `data/processed/live_runs/emissao_20260922T002209578274Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
+Arquivo local da execução: `data/processed/live_runs/emissao_20260922T103312157703Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
 
 ## Emissões reais conferidas
 
-Nenhuma emissão real arquivada com alvo já observável. Replays não contam como emissões.
+| alvo      |   h |   MAE_cm |   n |
+|:----------|----:|---------:|----:|
+| Encantado |   3 |     37.8 |   1 |
+| Encantado |   6 |    132.7 |   1 |
+| Encantado |   9 |    270.4 |   1 |
+| Estrela   |   3 |     18.9 |   1 |
+| Estrela   |   6 |     33.9 |   1 |
+| Estrela   |   9 |     50.8 |   1 |
+| Muçum     |   6 |    240.3 |   1 |
+| Muçum     |   9 |    285.3 |   1 |

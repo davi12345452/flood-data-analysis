@@ -5,6 +5,13 @@
 > conferida depois contra o que de fato aconteceu. Para decisão operacional:
 > [SACE/SGB](https://www.sgb.gov.br/sace/) e Defesa Civil do RS (199).
 
+> **Resultado conferido em 22/09 às 07h:** os três alvos cruzaram a cota de
+> inundação. Muçum chegou a 1871 cm às 04h e já recua; Encantado a 1643 cm às
+> 05h; Estrela estava em 2400 cm às 07h e ainda subia. Os números brutos das
+> 18h erraram entre 5 e 32 cm em 3 e 6 horas. A "correção de viés" publicada
+> ao lado deles errou para cima em 100 a 594 cm. Tabelas completas, por
+> emissão, em [previsto × observado](13_verificacao_setembro2026.md).
+
 Primeira rodada em tempo real deste projeto (`src/live/`). Todas as fases
 anteriores são retrospectivas: reconstroem o passado com rótulo conhecido.
 Os alvos futuros desta rodada ainda não foram observados. A aferição abaixo
@@ -71,6 +78,13 @@ Modelo por horizonte conforme o veredito da Fase 7: linear em h≤6, GBM em h≥
 | Estrela | 13:00 | 24 | **2225** | — sem amostra — | — | 1900 |
 
 Em negrito, os valores que cruzam a cota de inundação já no número bruto.
+
+**Conferência posterior (22/09):** o bruto acertou e o corrigido errou.
+Encantado e Estrela cruzaram a inundação às 20h, como o h=3 bruto indicava.
+Muçum ficou em 1759 cm à meia-noite (bruto: 1727; corrigido: 2095) e só
+cruzou 1800 cm à 01h. O viés medido nas horas de aceleração foi aplicado
+justamente quando a subida desacelerou, e por isso dobrou o erro em vez de
+reduzi-lo. Detalhes em [13_verificacao_setembro2026.md](13_verificacao_setembro2026.md).
 
 Horários de validade, em UTC−3: linear h=3 → 21/09 21h; linear h=6 →
 22/09 00h; GBM h=12 → 22/09 01h; GBM h=24 → 22/09 13h.

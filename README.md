@@ -82,6 +82,49 @@ faltam exemplos ou a cobertura recente cai, e confere emissões reais
 arquivadas separadamente de replays. Resultados completos e candidatos
 rejeitados: [`reports/12_melhoria_live.md`](reports/12_melhoria_live.md).
 
+### Previsto × observado (conferido em 22/09 às 07h)
+
+Os três alvos cruzaram a cota de inundação: Encantado e Estrela às 20h de
+21/09, Muçum à 01h de 22/09. Picos observados até 07h: Muçum 1871 cm (04h,
+já em recessão), Encantado 1643 cm (05h), Estrela 2400 cm (07h, ainda
+subindo). Cada número publicado durante o evento foi casado com a cota que a
+ANA mediu na validade: [`reports/13_verificacao_setembro2026.md`](reports/13_verificacao_setembro2026.md).
+
+| Emissão | h | MAE | Viés | n |
+|---|---|---|---|---|
+| 18h original (bruto) | 3 | 12 cm | −3 | 3 |
+| 18h original (bruto) | 6 | 22 cm | −22 | 3 |
+| 18h original (bruto) | 12 | 127 cm | −127 | 3 |
+| 21h | 3 | 28 cm | −9 | 2 |
+| 21h | 6 | 136 cm | −113 | 3 |
+| 21h | 9 | 202 cm | −168 | 3 |
+
+O que os números mostram, escrito depois de vê-los:
+
+- **O linear bruto de 3 e 6h acertou dentro de 5 a 32 cm** nas três estações,
+  em plena subida recorde. O replay das horas anteriores havia medido viés
+  de −24 a −367 cm nesses horizontes; a partir das 18h o erro caiu porque a
+  subida desacelerou, não porque o modelo mudou.
+- **A "correção de viés" errou em todas as nove linhas conferidas**, de +2 a
+  +594 cm, sempre para cima. Era aritmética sobre as horas de aceleração,
+  aplicada quando a aceleração acabou. Fica registrado como o erro
+  metodológico desta cheia: não corrigir viés com a própria fase que está
+  terminando.
+- **O GBM de variação da emissão das 21h previu recessão cedo demais** em
+  Muçum e Encantado: os rios subiram mais 4 a 5 horas e o erro em 6–9h ficou
+  entre −133 e −285 cm. Em Estrela, o linear errou para cima (+19 a +51 cm)
+  quando a subida perdeu força.
+- **O h=24 das 18h ainda não venceu** (13h de 22/09). Estrela já está 175 cm
+  acima do valor previsto para essa hora, então ele será subestimativa, como
+  a própria página das 18h antecipava.
+
+A emissão das 07h de 22/09 (referência 07:00, cotas até 07:00) projeta
+recessão em Muçum e Encantado e pico em Estrela por volta das 10h. Pela
+primeira vez as faixas empíricas de 6h foram publicadas nos três alvos, com
+cobertura recente de 83% ou mais. Segue em
+[`reports/live_ultima_rodada.md`](reports/live_ultima_rodada.md) e será
+conferida da mesma forma.
+
 ## O que tem aqui
 
 ```
@@ -128,6 +171,7 @@ uv run python -m src.live.evaluate          # valida e escolhe por evento passad
 uv run python -m src.live.improve           # compara candidatos e calibra faixas
 uv run python -m src.live.run --sem-atualizar # replay com o cache existente
 uv run python -m src.live.run               # atualiza ANA/ONS e baixa MERGE recente
+uv run python -m src.live.evento            # confere o publicado contra a cota observada
 ```
 
 Cada execução guarda entradas, configuração, código e resultados em

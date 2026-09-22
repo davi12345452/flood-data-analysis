@@ -20,3 +20,6 @@ notebooks/.ipynb_checkpoints/
 
 # macOS
 .DS_Store
+
+# Material de contato com poder público/imprensa — não versionar
+outreach/
