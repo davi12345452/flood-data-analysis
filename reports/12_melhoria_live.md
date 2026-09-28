@@ -45,7 +45,7 @@ usam a derivada observada na referência. Faixas são avaliadas por hora.
 | 86510000 |   9 | gbm_delta      | original |       0 |          6 |              3 | gbm_delta        | gbm_postos        | original           | True              | gbm_postos           | original              | False         |
 | 86510000 |  12 | gbm_delta      | original |       0 |          6 |              3 | gbm_delta        | gbm_postos        | original           | True              | gbm_postos           | original              | False         |
 | 86720000 |   6 | ridge_montante | original |       0 |          6 |              3 | linear           | ridge_montante    | original           | True              | ridge_montante       | original              | True          |
-| 86720000 |   9 | gbm_delta      | original |       0 |          6 |              3 | gbm_delta        | gbm_postos        | original           | True              | gbm_postos           | original              | False         |
+| 86720000 |   9 | gbm_delta      | original |       0 |          6 |              3 | gbm_delta        | gbm_postos        | meio_6h            | False             | gbm_delta            | original              | True          |
 | 86720000 |  12 | gbm_delta      | original |       0 |          6 |              3 | gbm_delta        | gbm_postos        | original           | True              | gbm_postos           | original              | False         |
 | 86879300 |   6 | linear         | original |       0 |          6 |              3 | linear           | linear            | original           | True              | linear               | original              | True          |
 | 86879300 |   9 | linear         | original |       0 |          6 |              3 | linear           | linear            | original           | True              | linear               | original              | True          |
@@ -59,14 +59,14 @@ usam a derivada observada na referência. Faixas são avaliadas por hora.
 | teste      | Encantado |   6 | descida  |          15.9 |              27.5 |        42.1 |
 | teste      | Encantado |   6 | rapida   |          35.9 |              77.3 |        53.6 |
 | teste      | Encantado |   6 | subida   |          46.2 |              70.7 |        34.7 |
-| teste      | Encantado |   9 | alto     |          47.3 |              47.3 |         0   |
-| teste      | Encantado |   9 | descida  |          17.6 |              17.6 |         0   |
-| teste      | Encantado |   9 | rapida   |          59   |              59   |         0   |
-| teste      | Encantado |   9 | subida   |          85.6 |              85.6 |         0   |
-| teste      | Encantado |  12 | alto     |          74.2 |              74.2 |         0   |
-| teste      | Encantado |  12 | descida  |          30.7 |              30.7 |         0   |
-| teste      | Encantado |  12 | rapida   |          85   |              85   |         0   |
-| teste      | Encantado |  12 | subida   |         129.6 |             129.6 |         0   |
+| teste      | Encantado |   9 | alto     |          47.2 |              47.2 |         0   |
+| teste      | Encantado |   9 | descida  |          19.3 |              19.3 |         0   |
+| teste      | Encantado |   9 | rapida   |          49   |              49   |         0   |
+| teste      | Encantado |   9 | subida   |          83.2 |              83.2 |         0   |
+| teste      | Encantado |  12 | alto     |          74.4 |              74.4 |         0   |
+| teste      | Encantado |  12 | descida  |          30.4 |              30.4 |         0   |
+| teste      | Encantado |  12 | rapida   |          86.5 |              86.5 |         0   |
+| teste      | Encantado |  12 | subida   |         130.3 |             130.3 |         0   |
 | teste      | Estrela   |   6 | alto     |          24.3 |              24.3 |         0   |
 | teste      | Estrela   |   6 | descida  |          18   |              18   |         0   |
 | teste      | Estrela   |   6 | rapida   |          38.8 |              38.8 |         0   |
@@ -79,18 +79,18 @@ usam a derivada observada na referência. Faixas são avaliadas por hora.
 | teste      | Estrela   |  12 | descida  |          30   |              30   |         0   |
 | teste      | Estrela   |  12 | rapida   |          68.8 |              68.8 |         0   |
 | teste      | Estrela   |  12 | subida   |          86.2 |              86.2 |         0   |
-| teste      | Muçum     |   6 | alto     |          37.3 |              37.3 |         0   |
-| teste      | Muçum     |   6 | descida  |          18.7 |              18.7 |         0   |
-| teste      | Muçum     |   6 | rapida   |          54.1 |              54.1 |         0   |
-| teste      | Muçum     |   6 | subida   |          54.2 |              54.2 |         0   |
-| teste      | Muçum     |   9 | alto     |          63.2 |              63.2 |         0   |
-| teste      | Muçum     |   9 | descida  |          53   |              53   |         0   |
-| teste      | Muçum     |   9 | rapida   |          82.4 |              82.4 |         0   |
-| teste      | Muçum     |   9 | subida   |          82.6 |              82.6 |         0   |
-| teste      | Muçum     |  12 | alto     |          92.3 |              92.3 |         0   |
-| teste      | Muçum     |  12 | descida  |          74   |              74   |         0   |
-| teste      | Muçum     |  12 | rapida   |          83   |              83   |         0   |
-| teste      | Muçum     |  12 | subida   |         133.8 |             133.8 |         0   |
+| teste      | Muçum     |   6 | alto     |          41.3 |              41.3 |         0   |
+| teste      | Muçum     |   6 | descida  |          19.2 |              19.2 |         0   |
+| teste      | Muçum     |   6 | rapida   |          53.5 |              53.5 |         0   |
+| teste      | Muçum     |   6 | subida   |          56.7 |              56.7 |         0   |
+| teste      | Muçum     |   9 | alto     |          62.3 |              62.3 |         0   |
+| teste      | Muçum     |   9 | descida  |          53.4 |              53.4 |         0   |
+| teste      | Muçum     |   9 | rapida   |          78.6 |              78.6 |         0   |
+| teste      | Muçum     |   9 | subida   |          78.8 |              78.8 |         0   |
+| teste      | Muçum     |  12 | alto     |          93.5 |              93.5 |         0   |
+| teste      | Muçum     |  12 | descida  |          74.5 |              74.5 |         0   |
+| teste      | Muçum     |  12 | rapida   |          88.9 |              88.9 |         0   |
+| teste      | Muçum     |  12 | subida   |         137   |             137   |         0   |
 
 ## Cobertura bruta das faixas em 2026
 
@@ -100,21 +100,21 @@ A tabela mede a faixa calibrada antes dos bloqueios de publicação. Na rodada, 
 |:----------|----:|:----------------|------------:|-----:|--------------:|------------:|
 | Encantado |   6 | False           |       0.862 | 1021 |          1021 |      31.598 |
 | Encantado |   6 | True            |       1     |   37 |            37 |     165.174 |
-| Encantado |   9 | False           |       0.883 | 1018 |          1018 |      53.669 |
-| Encantado |   9 | True            |       0.892 |   37 |            37 |     180.816 |
-| Encantado |  12 | False           |       0.879 | 1015 |          1015 |      71.732 |
-| Encantado |  12 | True            |       0.838 |   37 |            37 |     198.161 |
+| Encantado |   9 | False           |       0.885 | 1018 |          1018 |      52.467 |
+| Encantado |   9 | True            |       0.919 |   37 |            37 |     194.864 |
+| Encantado |  12 | False           |       0.88  | 1015 |          1015 |      72.763 |
+| Encantado |  12 | True            |       0.811 |   37 |            37 |     210.201 |
 | Estrela   |   6 | False           |       0.837 | 1039 |          1039 |      32.121 |
 | Estrela   |   6 | True            |     nan     |   27 |             0 |     nan     |
 | Estrela   |   9 | False           |       0.862 | 1036 |          1036 |      51.618 |
 | Estrela   |   9 | True            |     nan     |   27 |             0 |     nan     |
 | Estrela   |  12 | False           |       0.88  | 1033 |          1033 |      73.652 |
 | Estrela   |  12 | True            |     nan     |   27 |             0 |     nan     |
-| Muçum     |   6 | False           |       0.899 |  992 |           992 |      48.094 |
-| Muçum     |   6 | True            |       0.868 |   38 |            38 |     151.209 |
-| Muçum     |   9 | False           |       0.886 |  989 |           989 |      78.369 |
-| Muçum     |   9 | True            |       0.816 |   38 |            38 |     184.136 |
-| Muçum     |  12 | False           |       0.905 |  986 |           986 |     107.566 |
-| Muçum     |  12 | True            |       0.816 |   38 |            38 |     214.432 |
+| Muçum     |   6 | False           |       0.883 |  992 |           992 |      45.97  |
+| Muçum     |   6 | True            |       0.921 |   38 |            38 |     167.456 |
+| Muçum     |   9 | False           |       0.886 |  989 |           989 |      76.355 |
+| Muçum     |   9 | True            |       0.842 |   38 |            38 |     178.879 |
+| Muçum     |  12 | False           |       0.897 |  986 |           986 |     106.553 |
+| Muçum     |  12 | True            |       0.816 |   38 |            38 |     218.726 |
 
 Reprodução: `uv run python -m src.live.improve`. [Métricas por evento](12_melhoria_metricas.csv), [comparação por partição](12_melhoria_comparacao.csv).
