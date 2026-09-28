@@ -9,14 +9,17 @@ consolidado. O QC é o MESMO das Fases 2 — nenhuma regra é reimplementada.
 from __future__ import annotations
 
 import datetime as dt
+import io
+import time
 
 import pandas as pd
 
+from ..core.contracts import merge_observations
+from ..core.storage import atomic_write
 from ..ingest.ana_soap import fetch_month
-from ..ingest.common import RAW, ROOT, get, load_config, make_client
-from ..qc import flags
+from ..ingest.common import RAW, ROOT, get, load_config, make_client, write_meta, write_parquet
 from ..qc.ana import para_grade_horaria, qc_15min
-from ..qc.ons import COLUNAS_VALOR, USINAS
+from ..qc.ons import COLUNAS_VALOR, USINAS, normalizar_hora_24, processar
 
 INTERIM = ROOT / "data" / "interim"
 
@@ -36,12 +39,14 @@ def ana_recente(hoje: dt.date | None = None) -> pd.DataFrame:
     estacoes = load_config("stations")["estacoes_fluviometricas"]
 
     hist = pd.read_parquet(INTERIM / "ana_hourly.parquet")
-    desde = (hist["ts_utc"].max().tz_convert(None).date().replace(day=1))
-    meses = _meses_desde(desde, hoje)
 
     partes = []
     with make_client() as client:
         for est in estacoes:
+            proprio = hist.loc[hist.codigo == est["codigo"], "ts_utc"]
+            ultima = proprio.max() if not proprio.empty else hist.ts_utc.min()
+            desde = ultima.tz_convert("Etc/GMT+3").date().replace(day=1)
+            meses = _meses_desde(desde, hoje)
             blocos = []
             for ano, mes in meses:
                 ini = dt.date(ano, mes, 1)
@@ -52,6 +57,12 @@ def ana_recente(hoje: dt.date | None = None) -> pd.DataFrame:
                 except Exception as exc:
                     print(f"[live.ana] FALHA {est['nome']} {ano}-{mes:02d}: {exc}", flush=True)
                     continue
+                finally:
+                    time.sleep(cfg_ing["ana_soap"].get("pausa_s", 0.6))
+                dest = RAW / "ana_live" / str(est["codigo"]) / f"{ano}-{mes:02d}.parquet"
+                write_parquet(df, dest, url=cfg_ing["ana_soap"]["base_url"],
+                              params={"codigo": est["codigo"], "inicio": str(ini), "fim": str(fim)},
+                              partial=True)
                 if not df.empty:
                     df["origem"] = f"ano={ano}/mes={mes:02d}"
                     blocos.append(df)
@@ -67,10 +78,8 @@ def ana_recente(hoje: dt.date | None = None) -> pd.DataFrame:
             partes.append(horario)
             print(f"[live.ana] {est['nome']}: até {horario['ts_utc'].max()}", flush=True)
 
-    recente = pd.concat(partes, ignore_index=True)
-    corte = recente["ts_utc"].min()
-    out = pd.concat([hist[hist["ts_utc"] < corte], recente], ignore_index=True)
-    return out.sort_values(["codigo", "ts_utc"]).reset_index(drop=True)
+    recente = pd.concat(partes, ignore_index=True) if partes else pd.DataFrame()
+    return merge_observations(hist, recente, "codigo")
 
 
 def ons_recente(hoje: dt.date | None = None) -> pd.DataFrame:
@@ -81,18 +90,21 @@ def ons_recente(hoje: dt.date | None = None) -> pd.DataFrame:
     """
     hoje = hoje or dt.date.today()
     cfg_qc, cfg_ing = load_config("qc"), load_config("ingest")
-    romp = cfg_qc["rompimento_14julho"]
 
-    hist = pd.read_parquet(INTERIM / "ons_hourly.parquet")
-    desde = hist["ts_utc"].max().tz_convert(None).date().replace(day=1)
+    hist = normalizar_hora_24(pd.read_parquet(INTERIM / "ons_hourly.parquet"))
+    desde = hist.groupby("usina").ts_utc.max().min().tz_convert("Etc/GMT+3").date().replace(day=1)
     alvos = {f"{a}-{m:02d}" for a, m in _meses_desde(desde, hoje)}
 
     brutos = []
     with make_client() as client:
-        resp = get(client, f"{cfg_ing['ons']['ckan_base']}/package_show",
-                   params={"id": "dados_hidrologicos_ho"})
-        recursos = [r for r in resp.json()["result"]["resources"]
-                    if r.get("format", "").upper() == "PARQUET"]
+        try:
+            resp = get(client, f"{cfg_ing['ons']['ckan_base']}/package_show",
+                       params={"id": "dados_hidrologicos_ho"})
+            recursos = [r for r in resp.json()["result"]["resources"]
+                        if r.get("format", "").upper() == "PARQUET"]
+        except Exception as exc:
+            print(f"[live.ons] FALHA catálogo: {exc}", flush=True)
+            return hist.copy()
         por_mes: dict[str, dict] = {}
         for r in recursos:
             sufixo = r["name"][-7:]
@@ -103,50 +115,24 @@ def ons_recente(hoje: dt.date | None = None) -> pd.DataFrame:
         for sufixo, r in sorted(por_mes.items()):
             dest = RAW / "ons" / "dados_hidrologicos_ho" / f"live_{sufixo}.parquet"
             dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes(get(client, r["url"]).content)
-            df = pd.read_parquet(dest, columns=["cod_usina", "din_instante"] + COLUNAS_VALOR)
+            try:
+                content = get(client, r["url"]).content
+                df = pd.read_parquet(io.BytesIO(content),
+                                     columns=["cod_usina", "din_instante"] + COLUNAS_VALOR)
+            except Exception as exc:
+                print(f"[live.ons] FALHA {sufixo}: {exc}", flush=True)
+                continue
+            atomic_write(dest, lambda tmp, data=content: tmp.write_bytes(data))
+            write_meta(dest, url=r["url"], partial=True,
+                       extra={"last_modified": r.get("last_modified")})
             df["cod_usina"] = pd.to_numeric(df["cod_usina"], errors="coerce")
             brutos.append(df[df["cod_usina"].isin(USINAS)])
             print(f"[live.ons] {sufixo}: {r.get('last_modified')}", flush=True)
 
-    df = pd.concat(brutos, ignore_index=True)
-    df["dt_local"] = pd.to_datetime(df["din_instante"], errors="coerce")
-    df = df.dropna(subset=["dt_local"])
-    df["usina"] = df["cod_usina"].map(USINAS)
-
-    partes = []
-    for _, grupo in df.groupby("usina"):
-        g = grupo.copy()
-        g["flag_fora_de_ordem"] = flags.flag_fora_de_ordem(g["dt_local"])
-        g["flag_duplicado"] = flags.flag_duplicado(g["dt_local"])
-        g = g.sort_values("dt_local")
-        g = g[~g["flag_duplicado"]]
-        g["flag_defluente_zero"] = flags.flag_zero(g["val_vazaodefluente"])
-        g.loc[g["flag_defluente_zero"], "val_vazaodefluente"] = pd.NA
-        g.loc[g["val_vazaoafluente"] == 0, "val_vazaoafluente"] = pd.NA
-        g["flag_stuck"] = flags.flag_stuck(g["val_vazaodefluente"],
-                                           cfg_qc["stuck_min_steps_nivel"] // 2)
-        partes.append(g)
-    novo = pd.concat(partes, ignore_index=True)
-
-    # hora-fim -> início do período; local fixo -> UTC (idêntico à Fase 2)
-    novo["ts_utc"] = ((novo["dt_local"] - pd.Timedelta(hours=1))
-                      .dt.tz_localize(f"Etc/GMT+{-cfg_qc['tz_fixo_horas']}")
-                      .dt.tz_convert("UTC"))
-    novo["flag_dst_incerto"] = flags.flag_dst_incerto(pd.DatetimeIndex(novo["ts_utc"]))
-    novo["flag_pos_rompimento"] = (
-        (novo["usina"] == romp["usina"])
-        & (novo["ts_utc"] >= pd.Timestamp(romp["inicio"], tz="UTC"))
-        & (novo["ts_utc"] <= pd.Timestamp(romp["fim"], tz="UTC"))
-    )
-    colunas = (["usina", "cod_usina", "ts_utc"] + COLUNAS_VALOR
-               + [c for c in novo.columns if c.startswith("flag_")])
-    novo = novo[colunas].rename(columns={
-        "val_vazaoafluente": "afluente_m3s", "val_vazaodefluente": "defluente_m3s",
-        "val_vazaoturbinada": "turbinada_m3s", "val_vazaovertida": "vertida_m3s",
-        "val_nivelmontante": "nivel_montante_m",
-    })
-    corte = novo["ts_utc"].min()
-    out = pd.concat([hist[hist["ts_utc"] < corte], novo], ignore_index=True)
-    print(f"[live.ons] defluência até {out['ts_utc'].max()}", flush=True)
-    return out.sort_values(["usina", "ts_utc"]).reset_index(drop=True)
+    if not brutos:
+        return hist.copy()
+    bruto = pd.concat(brutos, ignore_index=True)
+    if bruto.empty:
+        return hist.copy()
+    novo = processar(bruto, cfg_qc)
+    return merge_observations(hist, novo, "usina")

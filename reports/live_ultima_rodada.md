@@ -1,23 +1,23 @@
 # Revisão da rodada de 28/09/2026 17:00
 
-Modo: **emissao**. Referência observada: 28/09 17:00 (UTC−3). Emissão registrada em 28/09/2026 17:38:56 local. A antecedência real desconta o tempo desde a observação.
+Modo: **replay**. Referência observada: 28/09 17:00 (UTC−3). Uma execução com cache não é uma previsão emitida naquele horário.
 
 Horizontes contados desde a referência da própria estação; chuva e ONS mantêm seus atrasos no treino e na inferência. Alterações de modelo passam por comparação por fase da cheia. A coluna de cota é uma estimativa pontual, não uma cota de pico. Não é sistema de alerta.
 
-| alvo      | motor          |   h | referencia_local   |   observado_cm | previsto_cm   | validade_local   |   antecedencia_real_h | status              |
-|:----------|:---------------|----:|:-------------------|---------------:|:--------------|:-----------------|----------------------:|:--------------------|
-| Muçum     | linear         |   3 | 28/09 17:00        |            778 | —             | 28/09 20:00      |                   2.4 | dados_insuficientes |
-| Muçum     | gbm_delta      |   6 | 28/09 17:00        |            778 | 1006.1        | 28/09 23:00      |                   5.4 | estimativa          |
-| Muçum     | gbm_delta      |   9 | 28/09 17:00        |            778 | 983.6         | 29/09 02:00      |                   8.4 | estimativa          |
-| Muçum     | gbm_delta      |  12 | 28/09 17:00        |            778 | 969.5         | 29/09 05:00      |                  11.4 | estimativa          |
-| Encantado | linear         |   3 | 28/09 17:00        |            600 | 763.9         | 28/09 20:00      |                   2.4 | estimativa          |
-| Encantado | ridge_montante |   6 | 28/09 17:00        |            600 | 858.4         | 28/09 23:00      |                   5.4 | estimativa          |
-| Encantado | gbm_delta      |   9 | 28/09 17:00        |            600 | 844.6         | 29/09 02:00      |                   8.4 | estimativa          |
-| Encantado | gbm_delta      |  12 | 28/09 17:00        |            600 | 870.7         | 29/09 05:00      |                  11.4 | estimativa          |
-| Estrela   | linear         |   3 | 28/09 17:00        |           1561 | 1665.7        | 28/09 20:00      |                   2.4 | estimativa          |
-| Estrela   | linear         |   6 | 28/09 17:00        |           1561 | 1770.1        | 28/09 23:00      |                   5.4 | estimativa          |
-| Estrela   | linear         |   9 | 28/09 17:00        |           1561 | 1862.1        | 29/09 02:00      |                   8.4 | estimativa          |
-| Estrela   | linear         |  12 | 28/09 17:00        |           1561 | 1930.5        | 29/09 05:00      |                  11.4 | estimativa          |
+| alvo      | motor          |   h | referencia_local   |   observado_cm | previsto_cm   | validade_local   | status              |
+|:----------|:---------------|----:|:-------------------|---------------:|:--------------|:-----------------|:--------------------|
+| Muçum     | linear         |   3 | 28/09 17:00        |            778 | —             | 28/09 20:00      | dados_insuficientes |
+| Muçum     | gbm_delta      |   6 | 28/09 17:00        |            778 | 1005.2        | 28/09 23:00      | estimativa          |
+| Muçum     | gbm_delta      |   9 | 28/09 17:00        |            778 | 1007.0        | 29/09 02:00      | estimativa          |
+| Muçum     | gbm_delta      |  12 | 28/09 17:00        |            778 | 962.8         | 29/09 05:00      | estimativa          |
+| Encantado | linear         |   3 | 28/09 17:00        |            600 | 763.8         | 28/09 20:00      | estimativa          |
+| Encantado | ridge_montante |   6 | 28/09 17:00        |            600 | 858.1         | 28/09 23:00      | estimativa          |
+| Encantado | gbm_delta      |   9 | 28/09 17:00        |            600 | 851.0         | 29/09 02:00      | estimativa          |
+| Encantado | gbm_delta      |  12 | 28/09 17:00        |            600 | 876.0         | 29/09 05:00      | estimativa          |
+| Estrela   | linear         |   3 | 28/09 17:00        |           1561 | 1665.7        | 28/09 20:00      | estimativa          |
+| Estrela   | linear         |   6 | 28/09 17:00        |           1561 | 1769.9        | 28/09 23:00      | estimativa          |
+| Estrela   | linear         |   9 | 28/09 17:00        |           1561 | 1861.6        | 29/09 02:00      | estimativa          |
+| Estrela   | linear         |  12 | 28/09 17:00        |           1561 | 1929.6        | 29/09 05:00      | estimativa          |
 
 ## Faixas e diagnóstico
 
@@ -27,7 +27,7 @@ As faixas usam o quantil 90% dos erros de 2025, separado por regime, sem garanti
 |:----------|----:|:--------------|:--------------|:-------------------------------|:------------------------|------------------:|
 | Muçum     |   3 | —             | —             | faltam dados                   | —                       |                 0 |
 | Muçum     |   6 | —             | —             | erros recentes excedem a faixa | 16.7                    |                 6 |
-| Muçum     |   9 | —             | —             | erros recentes excedem a faixa | 16.7                    |                 6 |
+| Muçum     |   9 | —             | —             | erros recentes excedem a faixa | 33.3                    |                 6 |
 | Muçum     |  12 | —             | —             | erros recentes excedem a faixa | 50.0                    |                 6 |
 | Encantado |   3 | —             | —             | sem calibração                 | —                       |                 0 |
 | Encantado |   6 | —             | —             | erros recentes excedem a faixa | 0.0                     |                 6 |
@@ -47,21 +47,21 @@ Referências a partir de 27/09 17:00; somente alvos já observados. Horizontes m
 | alvo      |   h |   MAE_cm |   vies_cm |   n |
 |:----------|----:|---------:|----------:|----:|
 | Encantado |   3 |     27.9 |     -22.2 |  22 |
-| Encantado |   6 |     69.4 |     -69.4 |  19 |
-| Encantado |   9 |     95.7 |     -80.9 |  16 |
-| Encantado |  12 |    111   |     -97.1 |  13 |
-| Estrela   |   3 |     13   |      -8   |  22 |
+| Encantado |   6 |     69.5 |     -69.5 |  19 |
+| Encantado |   9 |     96.1 |     -81.4 |  16 |
+| Encantado |  12 |    111.1 |     -95.5 |  13 |
+| Estrela   |   3 |     13.1 |      -8   |  22 |
 | Estrela   |   6 |     31.3 |     -25.6 |  19 |
-| Estrela   |   9 |     55.8 |     -55.5 |  16 |
+| Estrela   |   9 |     55.8 |     -55.6 |  16 |
 | Estrela   |  12 |     94.7 |     -94.7 |  13 |
-| Muçum     |   3 |     37.7 |     -30.6 |  22 |
-| Muçum     |   6 |     58.8 |     -36.7 |  19 |
-| Muçum     |   9 |     89.2 |     -31.4 |  16 |
-| Muçum     |  12 |     94.1 |     -36.3 |  13 |
+| Muçum     |   3 |     37.7 |     -30.7 |  22 |
+| Muçum     |   6 |     58.2 |     -36.6 |  19 |
+| Muçum     |   9 |     85.3 |     -28.8 |  16 |
+| Muçum     |  12 |     93.7 |     -34.2 |  13 |
 
 Os candidatos são escolhidos em 2023–2024, confirmados em 2025 e podem ser vetados por regressão em 2026. A comparação completa está em [melhoria e aceitação](12_melhoria_live.md). O replay assume atrasos fixos e não recompõe a publicação real de cada fonte.
 
-Arquivo local da execução: `data/processed/live_runs/emissao_20260928T203856208123Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
+Arquivo local da execução: `data/processed/live_runs/replay_20260928T214042247933Z`. Contém previsões, replay, features, datasets de treino, código e configuração.
 
 ## Emissões reais conferidas
 

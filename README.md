@@ -24,6 +24,12 @@ Este repositório junta tudo em um pipeline auditável e responde, com números:
 
 ## A resposta curta
 
+Os números resumidos abaixo registram a validação original. A revisão de
+arquitetura de 28/09/2026 corrige purga temporal e tratamento de chuva ausente;
+as métricas recalculadas ficam nos relatórios [06](reports/06_baselines.md),
+[07](reports/07_modelo.md), [08](reports/08_avaliacao.md),
+[11](reports/11_validacao_live.md) e [12](reports/12_melhoria_live.md).
+
 Resultados da validação retrospectiva original (Fases 6–8). Para estimativas
 com latência de fontes, consulte a revisão de setembro abaixo.
 
@@ -160,9 +166,15 @@ make all    # reconstrói tudo do cache (~12 GB no primeiro make ingest)
 make test   # QC, fusos, causalidade, latências e registro de previsões
 ```
 
-Cada alvo é idempotente e cache-first; após `make ingest`, nada depende de
-rede. Alvos individuais: `ingest → reference → qc → spatial → features →
-dataset → baselines → model → evaluation` (ver `Makefile`).
+O Make declara as dependências entre as etapas e serializa as escritas, inclusive
+com `-j`. Downloads de referência, geometria e chuva das janelas podem ocorrer
+após a ingestão inicial. `OFFLINE=1` bloqueia HTTP; reconstruir do zero exige o
+cache completo. Para recalcular tudo a partir dos interims e das janelas locais,
+sem acessar fontes nem redefinir os eventos, use `make revalidate`.
+
+Contratos de dados, chuva ausente, purga temporal, versões de modelos e reprodução
+de execuções: [arquitetura](docs/architecture.md). Correções, comparação das
+métricas e evidências de reprodução: [revisão de 28/09](reports/15_revisao_arquitetura.md).
 
 Para a revisão de 6–12h:
 
@@ -174,8 +186,11 @@ uv run python -m src.live.run               # atualiza ANA/ONS e baixa MERGE rec
 uv run python -m src.live.evento            # confere o publicado contra a cota observada
 ```
 
-Cada execução guarda entradas, configuração, código e resultados em
-`data/processed/live_runs/`. Replay não recebe horário de emissão; execução
+A política é vinculada por hash aos dados de treino, features, código,
+configuração e ambiente. Alterações incompatíveis exigem nova validação; modelos
+com o mesmo treino são reutilizados do cache. Cada execução guarda entradas,
+modelos, configuração, código e resultados em
+`data/processed/live_runs/`, publicando a pasta apenas quando o arquivo está completo. Replay não recebe horário de emissão; execução
 com atualização registra emissão real e antecedência restante. O MERGE recente
 é baixado antes da agregação; arquivos ainda não publicados ficam registrados
 como ausentes, sem preenchimento.

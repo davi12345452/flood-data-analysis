@@ -125,7 +125,7 @@ def agregar_arquivo(caminho: Path, cache: PesosPorGrade) -> dict[int, float] | N
     for codigo, grupo in pesos.groupby("codigo"):
         v = valores[grupo["i"].values, grupo["j"].values]
         ok = ~np.isnan(v)
-        out[int(codigo)] = float(np.sum(v[ok] * grupo["peso"].values[ok])) if ok.any() else np.nan
+        out[int(codigo)] = float(np.sum(v * grupo["peso"].values)) if ok.all() else np.nan
     return out
 
 

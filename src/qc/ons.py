@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..ingest.common import RAW, ROOT, load_config
+from ..ingest.common import RAW, ROOT, load_config, source_order
 from . import flags
 
 INTERIM = ROOT / "data" / "interim"
@@ -31,21 +31,45 @@ COLUNAS_VALOR = [
 def carregar() -> pd.DataFrame:
     arquivos = sorted((RAW / "ons" / "dados_hidrologicos_ho").glob("*.parquet"))
     partes = []
-    for a in arquivos:
+    for a in sorted(arquivos, key=source_order):
         df = pd.read_parquet(a, columns=["cod_usina", "din_instante"] + COLUNAS_VALOR)
         df["cod_usina"] = pd.to_numeric(df["cod_usina"], errors="coerce")
+        df["_versao_fonte"] = len(partes)
         partes.append(df[df["cod_usina"].isin(USINAS)])
-    return pd.concat(partes, ignore_index=True)
+    df = pd.concat(partes, ignore_index=True)
+    ultima = df.groupby(["cod_usina", "din_instante"])["_versao_fonte"].transform("max")
+    return df[df._versao_fonte == ultima].drop(columns="_versao_fonte")
 
 
-def run() -> None:
-    cfg = load_config("qc")
+def normalizar_hora_24(hist: pd.DataFrame) -> pd.DataFrame:
+    """Repara históricos gravados antes da correção da hora 24 (23:59 local).
+
+    A hora que o ONS grava como 23:59 é o fim da hora 23-24; o rótulo UTC
+    correto é a hora cheia seguinte. Se a mesma chave já existir, vale a
+    linha que já estava alinhada.
+    """
+    ts = pd.DatetimeIndex(hist["ts_utc"])
+    desalinhado = ts.minute == 59
+    if not desalinhado.any():
+        return hist
+    out = hist.copy()
+    out.loc[desalinhado, "ts_utc"] = ts[desalinhado].ceil("h")
+    out["_reparado"] = desalinhado
+    out = out.sort_values(["usina", "ts_utc", "_reparado"]).drop_duplicates(["usina", "ts_utc"])
+    return out.drop(columns="_reparado").reset_index(drop=True)
+
+
+def processar(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """QC único, usado tanto pelo histórico quanto pela atualização incremental."""
+    df = df.copy()
     tz_horas = cfg["tz_fixo_horas"]
     romp = cfg["rompimento_14julho"]
 
-    df = carregar()
     df["dt_local"] = pd.to_datetime(df["din_instante"], errors="coerce")
     df = df.dropna(subset=["dt_local"])
+    # O ONS grava a hora 24 como 23:59 do mesmo dia; é o fim da hora 23-24.
+    fim_do_dia = (df["dt_local"].dt.hour == 23) & (df["dt_local"].dt.minute == 59)
+    df.loc[fim_do_dia, "dt_local"] = df.loc[fim_do_dia, "dt_local"].dt.ceil("h")
     df["usina"] = df["cod_usina"].map(USINAS)
 
     partes = []
@@ -93,12 +117,14 @@ def run() -> None:
         "val_vazaovertida": "vertida_m3s",
         "val_nivelmontante": "nivel_montante_m",
     })
-    INTERIM.mkdir(parents=True, exist_ok=True)
-    final.to_parquet(INTERIM / "ons_hourly.parquet", index=False)
-    print(f"[qc.ons] {len(final)} linhas em data/interim/ons_hourly.parquet")
-    for usina, g in final.groupby("usina"):
-        print(f"[qc.ons] {usina}: {g['ts_utc'].min()} -> {g['ts_utc'].max()}, "
-              f"defluente NaN {g['defluente_m3s'].isna().mean():.1%}")
+    return final
+
+
+def run() -> None:
+    from ..core.storage import parquet
+    final = processar(carregar(), load_config("qc"))
+    parquet(final, INTERIM / "ons_hourly.parquet")
+    print(f"[qc.ons] {len(final)} linhas")
 
 
 if __name__ == "__main__":

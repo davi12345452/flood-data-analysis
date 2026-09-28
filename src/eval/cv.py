@@ -12,7 +12,8 @@ from collections.abc import Iterator
 
 import pandas as pd
 
-from ..ingest.common import ROOT
+from ..core.contracts import hourly_index
+from ..ingest.common import ROOT, load_config
 
 PROCESSED = ROOT / "data" / "processed"
 
@@ -23,8 +24,26 @@ def carregar_dataset(codigo: int) -> pd.DataFrame:
 
 
 def folds_por_evento(ds: pd.DataFrame) -> Iterator[tuple[str, pd.DataFrame, pd.DataFrame]]:
+    hourly_index(ds.index)
     eventos = sorted(ds.loc[ds["tipo"] == "evento", "janela_id"].unique())
     for ev in eventos:
         test = ds[ds["janela_id"] == ev]
         train = ds[ds["janela_id"] != ev]
-        yield ev, train, test
+        yield ev, purgar(train, test), test
+
+
+def purgar(train: pd.DataFrame, test: pd.DataFrame, lookback_h: int | None = None) -> pd.DataFrame:
+    """Exclui intervalos de informação que cruzam o teste (inclusive bordas).
+
+    Protege rótulos até o maior horizonte e o contexto horário de chuva.
+    A CV continua retrospectiva; para simular emissão use treino_antes.
+    """
+    if train.empty or test.empty:
+        return train.copy()
+    h = max((int(c[2:-1]) for c in train if c.startswith("y_") and c.endswith("h")), default=0)
+    lookback = max(load_config("features")["janelas_chuva_h"]) if lookback_h is None else lookback_h
+    inicio = test.index.min() - pd.Timedelta(hours=lookback)
+    fim = test.index.max() + pd.Timedelta(hours=h)
+    fora = ((train.index + pd.Timedelta(hours=h) < inicio)
+            | (train.index - pd.Timedelta(hours=lookback) > fim))
+    return train.loc[fora].copy()

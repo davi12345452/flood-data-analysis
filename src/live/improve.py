@@ -11,6 +11,8 @@ import json
 
 import pandas as pd
 
+from ..core import provenance
+from ..core.storage import text
 from ..ingest.common import ROOT
 from . import adaptation
 from . import operational as op
@@ -27,6 +29,10 @@ def particao(evento: str) -> str:
 
 
 def experimentar(frame: pd.DataFrame) -> pd.DataFrame:
+    base_manifesto = json.loads((R / "11_live_modelos.json").read_text())
+    provenance.validate(base_manifesto.get("contrato"), frame)
+    if base_manifesto.get("previsoes_sha256") != provenance.sha256(P / "live_validacao_previsoes.parquet"):
+        raise RuntimeError("Previsões base não pertencem à validação publicada.")
     anteriores = pd.read_parquet(P / "live_validacao_previsoes.parquet")
     modelos = json.loads((R / "11_live_modelos.json").read_text())["modelos"]
     base = {(m["codigo"], m["h"]): m["motor"] for m in modelos}
@@ -65,7 +71,12 @@ def experimentar(frame: pd.DataFrame) -> pd.DataFrame:
                         partes.append(saida.reset_index(names="t_ref_utc"))
             print(f"[melhoria] {nome} {ev}", flush=True)
     out = pd.concat(partes, ignore_index=True)
+    provenance.validate(base_manifesto["contrato"], frame)
     out.to_parquet(P / "live_experimento_previsoes.parquet", index=False)
+    text(json.dumps({"contrato": base_manifesto["contrato"],
+                     "base_sha256": provenance.sha256(R / "11_live_modelos.json"),
+                     "preds_sha256": provenance.sha256(P / "live_experimento_previsoes.parquet")}),
+         P / "live_experimento_manifesto.json")
     return out
 
 
@@ -171,7 +182,7 @@ def calibrar(preds: pd.DataFrame) -> list[dict]:
     return linhas
 
 
-def publicar(preds: pd.DataFrame) -> None:
+def publicar(preds: pd.DataFrame, *, contrato: dict) -> None:
     m = metricas(preds)
     m.to_csv(R / "12_melhoria_metricas.csv", index=False)
     escolhas = escolher(m)
@@ -179,8 +190,9 @@ def publicar(preds: pd.DataFrame) -> None:
     faixas = calibrar(selecionado)
     manifesto = {"protocolo": "ajuste_causal_v1", "atrasos_h": op.ATRASOS,
                  "desenvolvimento": "2023–2024", "calibracao": "2025", "aceitacao": "2026",
-                 "modelos": escolhas, "faixas": faixas}
-    (R / "12_live_modelos.json").write_text(json.dumps(manifesto, ensure_ascii=False, indent=2) + "\n")
+                 "modelos": escolhas, "faixas": faixas, "contrato": contrato,
+                 "base_sha256": provenance.sha256(R / "11_live_modelos.json")}
+    provenance.publish_manifest(manifesto, R / "12_live_modelos.json")
     atual = m.merge(pd.DataFrame(escolhas)[["codigo", "h", "motor", "ajuste"]],
                    on=["codigo", "h", "motor", "ajuste"])
     bases = pd.DataFrame(escolhas)[["codigo", "h", "motor_anterior"]].rename(
@@ -265,21 +277,22 @@ def main() -> None:
     parser.add_argument("--frame")
     parser.add_argument("--republicar", action="store_true")
     args = parser.parse_args()
+    from ..features.build import montar
+    frame = pd.read_parquet(args.frame) if args.frame else montar()
+    base = json.loads((R / "11_live_modelos.json").read_text())
+    provenance.validate(base.get("contrato"), frame)
     if args.republicar:
+        meta = json.loads((P / "live_experimento_manifesto.json").read_text())
+        provenance.validate(meta.get("contrato"), frame)
+        if (meta["base_sha256"] != provenance.sha256(R / "11_live_modelos.json")
+                or meta["preds_sha256"] != provenance.sha256(P / "live_experimento_previsoes.parquet")):
+            raise RuntimeError("Experimento incompatível; execute improve sem --republicar.")
         preds = pd.read_parquet(P / "live_experimento_previsoes.parquet")
     else:
-        from ..features.build import montar
-        frame = pd.read_parquet(args.frame) if args.frame else montar()
-        if not any(c.startswith("posto_") for c in frame):
-            from ..features.build import APELIDO_ESTACAO
-            from ..features.rain import acumulados_posto
-            ana = pd.read_parquet(ROOT / "data/interim/ana_hourly.parquet")
-            blocos = [acumulados_posto(ana[ana.codigo == codigo], ap)
-                      for codigo, ap in APELIDO_ESTACAO.items() if (ana.codigo == codigo).any()]
-            frame = frame.join(pd.concat(blocos, axis=1))
         frame.to_parquet(P / "live_features_postos.parquet")
         preds = experimentar(frame)
-    publicar(preds)
+    provenance.validate(base["contrato"], frame)
+    publicar(preds, contrato=base["contrato"])
 
 
 if __name__ == "__main__":

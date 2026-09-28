@@ -36,6 +36,8 @@ def regressao_lags(train: pd.DataFrame, test: pd.DataFrame,
     cols = _cols_lags(train, codigo)
     alvo = f"y_{h}h"
     tr = train[cols + [alvo]].dropna()
+    if len(tr) < max(10, len(cols) + 1):
+        return pd.Series(np.nan, index=test.index, name="pred")
     modelo = LinearRegression().fit(tr[cols], tr[alvo])
     ok = test[cols].notna().all(axis=1)
     pred = pd.Series(np.nan, index=test.index, name="pred")
@@ -51,7 +53,7 @@ def estimar_tempo_viagem(train: pd.DataFrame, codigo: int,
     montante = train[f"nivel_{MONTANTE[codigo]}"]
     melhor, melhor_r = 1, -np.inf
     for lag in range(max_lag_h + 1):
-        r = alvo.corr(montante.shift(lag))
+        r = alvo.corr(_lag_temporal(train, montante.name, lag))
         if pd.notna(r) and r > melhor_r:
             melhor, melhor_r = lag, r
     return melhor
@@ -72,7 +74,7 @@ def propagacao(train: pd.DataFrame, test: pd.DataFrame,
     up = f"nivel_{MONTANTE[codigo]}"
 
     def desloca(df: pd.DataFrame) -> pd.Series:
-        return df.groupby("janela_id")[up].shift(atraso)
+        return _lag_temporal(df, up, atraso)
 
     x_tr = desloca(train)
     tr = pd.DataFrame({"x": x_tr, "y": train[alvo]}).dropna()
@@ -85,3 +87,11 @@ def propagacao(train: pd.DataFrame, test: pd.DataFrame,
     if ok.any():
         pred[ok] = modelo.predict(x_te[ok].to_frame("x"))
     return pred
+
+
+def _lag_temporal(ds: pd.DataFrame, col: str, h: int) -> pd.Series:
+    """Busca exata, sem saltar lacunas nem atravessar janelas."""
+    passado = ds.index - pd.Timedelta(hours=h)
+    values = ds[col].reindex(passado).to_numpy()
+    mesma = ds.janela_id.reindex(passado).to_numpy() == ds.janela_id.to_numpy()
+    return pd.Series(values, index=ds.index, name=col).where(mesma)

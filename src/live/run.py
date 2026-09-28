@@ -6,16 +6,14 @@ Escolha de modelos documentada em reports/11_validacao_live.md.
 
 from __future__ import annotations
 
-import hashlib
-import json
-import shutil
-
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from ..core import storage
+from ..core.contracts import observations
 from ..eval.figures import AZUL, LARANJA, OBS, TEXTO, TEXTO_2, _estilo
 from ..features import build as features_build
 from ..ingest.common import REFERENCE, ROOT
@@ -33,8 +31,11 @@ TZ_LOCAL = "Etc/GMT+3"
 
 def atualizar_fontes() -> None:
     """Busca o que falta em cada fonte e regrava o interim consolidado."""
-    ingest.ana_recente().to_parquet(INTERIM / "ana_hourly.parquet", index=False)
-    ingest.ons_recente().to_parquet(INTERIM / "ons_hourly.parquet", index=False)
+    ana, ons = ingest.ana_recente(), ingest.ons_recente()
+    observations(ana, "codigo")
+    observations(ons, "usina")
+    storage.parquet(ana, INTERIM / "ana_hourly.parquet")
+    storage.parquet(ons, INTERIM / "ons_hourly.parquet")
     merge_live.baixar_recentes()
     merge_live.diaria_incremental()
     merge_live.horaria_live(pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=8))
@@ -128,42 +129,8 @@ def figura(frame: pd.DataFrame, prev: pd.DataFrame, horas: int = 36):
 
 def registrar(frame: pd.DataFrame, prev: pd.DataFrame, bt: pd.DataFrame,
               atualizar: bool):
-    """Diretório único por execução; mantém entradas e código para auditoria."""
-    agora = pd.Timestamp.now(tz="UTC")
-    modo = "emissao" if atualizar else "replay"
-    pasta = PROCESSED / "live_runs" / f"{modo}_{agora:%Y%m%dT%H%M%S%fZ}"
-    pasta.mkdir(parents=True, exist_ok=False)
-    prev = prev.copy()
-    prev["gerado_em_utc"] = agora
-    prev["modo"] = modo
-    prev["emitido_em_utc"] = agora if atualizar else pd.NaT
-    prev["antecedencia_real_h"] = (
-        (prev["valido_para_utc"] - agora).dt.total_seconds() / 3600 if atualizar else float("nan")
-    )
-    if atualizar:
-        prev.loc[prev.antecedencia_real_h <= 0, "status"] = "validade_expirada"
-    prev.to_parquet(pasta / "previsoes.parquet", index=False)
-    bt.to_parquet(pasta / "replay.parquet", index=False)
-    frame.to_parquet(pasta / "features.parquet")
-    arquivos = [ROOT / "uv.lock", ROOT / "reports/11_live_modelos.json"]
-    if (ROOT / "reports/12_live_modelos.json").exists():
-        arquivos.append(ROOT / "reports/12_live_modelos.json")
-    arquivos += [PROCESSED / f"dataset_{codigo}.parquet" for codigo in ALVOS]
-    hashes = {}
-    for arquivo in arquivos:
-        shutil.copy2(arquivo, pasta / arquivo.name)
-        hashes[str(arquivo.relative_to(ROOT))] = hashlib.sha256(arquivo.read_bytes()).hexdigest()
-    shutil.copytree(ROOT / "src", pasta / "src", ignore=shutil.ignore_patterns("__pycache__"))
-    shutil.copytree(ROOT / "config", pasta / "config")
-    meta = {"modo": modo, "gerado_em_utc": agora.isoformat(),
-            "referencia_utc": prev.t_ref_utc.max().isoformat(),
-            "atrasos_assumidos_h": operational.ATRASOS, "sha256": hashes,
-            "avaliacao": "replay com latências assumidas; não emissões passadas",
-            "sem_correcao_de_vies": bool("ajuste_cm" not in prev or prev.ajuste_cm.eq(0).all())}
-    (pasta / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n")
-    prev.to_parquet(PROCESSED / "live_v3_previsoes.parquet", index=False)
-    bt.to_parquet(PROCESSED / "live_v3_replay.parquet", index=False)
-    return prev, pasta
+    from .archive import registrar as salvar
+    return salvar(frame, prev, bt, atualizar, root=ROOT, processed=PROCESSED, alvos=ALVOS)
 
 
 def relatorio(prev: pd.DataFrame, bt: pd.DataFrame, pasta,
@@ -251,16 +218,24 @@ def relatorio(prev: pd.DataFrame, bt: pd.DataFrame, pasta,
     (pasta / "relatorio.md").write_text(texto)
 
 
-def run(atualizar: bool = True):
+def run(atualizar: bool = True, frame_path=None):
+    # Mesmo lock usado pelas etapas batch: snapshot e atualização consistentes.
+    with storage.exclusive(PROCESSED / ".pipeline.lock"):
+        return _run(atualizar, frame_path)
+
+
+def _run(atualizar: bool, frame_path=None):
+    if atualizar and frame_path:
+        raise ValueError("Um frame arquivado só pode ser usado em replay (--sem-atualizar).")
     if atualizar:
         atualizar_fontes()
-    frame = features_build.montar()
+    frame = pd.read_parquet(frame_path) if frame_path else features_build.montar()
     prev, bt = operational.rodada(frame)
     prev, pasta = registrar(frame, prev, bt, atualizar)
     destino = figura(frame, prev, horas=36)
     verificadas = verification.conferir(frame, PROCESSED / "live_runs", pd.Timestamp.now(tz="UTC"))
-    verificadas.to_parquet(pasta / "emissoes_conferidas.parquet", index=False)
-    verificadas.to_parquet(PROCESSED / "live_emissoes_conferidas.parquet", index=False)
+    storage.parquet(verificadas, pasta / "emissoes_conferidas.parquet")
+    storage.parquet(verificadas, PROCESSED / "live_emissoes_conferidas.parquet")
     relatorio(prev, bt, pasta, verificadas)
     print(prev.to_string(index=False))
     print(f"[live] execução arquivada em {pasta}")
@@ -268,5 +243,9 @@ def run(atualizar: bool = True):
 
 
 if __name__ == "__main__":
-    import sys
-    run(atualizar="--sem-atualizar" not in sys.argv)
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--sem-atualizar", action="store_true")
+    parser.add_argument("--frame", help="Features arquivadas, apenas para replay")
+    args = parser.parse_args()
+    run(atualizar=not args.sem_atualizar, frame_path=args.frame)

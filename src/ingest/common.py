@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 from pathlib import Path
 
 import httpx
@@ -18,10 +19,11 @@ import pandas as pd
 import yaml
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data" / "raw"
-REFERENCE = ROOT / "data" / "reference"
-CONFIG_DIR = ROOT / "config"
+from ..core.paths import CONFIG_DIR
+from ..core.paths import RAW as RAW  # noqa: PLC0414
+from ..core.paths import REFERENCE as REFERENCE  # noqa: PLC0414
+from ..core.paths import ROOT as ROOT  # noqa: PLC0414
+from ..core.storage import atomic_write, parquet, text
 
 
 def load_config(name: str) -> dict:
@@ -38,7 +40,13 @@ def make_client(timeout_s: float | None = None) -> httpx.Client:
         headers={"User-Agent": cfg["user_agent"]},
         timeout=timeout_s or cfg["timeout_s"],
         follow_redirects=True,
+        event_hooks={"request": [_offline_request]},
     )
+
+
+def _offline_request(request: httpx.Request) -> None:
+    if os.environ.get("FLOOD_OFFLINE") == "1":
+        raise RuntimeError(f"Modo offline: HTTP bloqueado ({request.url}).")
 
 
 class TransientHTTPError(Exception):
@@ -53,6 +61,8 @@ class TransientHTTPError(Exception):
 )
 def get(client: httpx.Client, url: str, params: dict | None = None) -> httpx.Response:
     """GET com retry exponencial. 4xx não é retentado (erro real, reportar)."""
+    if os.environ.get("FLOOD_OFFLINE") == "1":
+        raise RuntimeError(f"Modo offline: recurso não disponível no cache ({url}).")
     try:
         resp = client.get(url, params=params)
     except (httpx.TransportError, httpx.TimeoutException) as exc:
@@ -69,7 +79,18 @@ def meta_path(dest: Path) -> Path:
 
 def is_cached(dest: Path) -> bool:
     """Um artefato só conta como baixado se o arquivo E o meta existem."""
-    return dest.exists() and meta_path(dest).exists()
+    if not dest.exists() or not meta_path(dest).exists():
+        return False
+    try:
+        meta = json.loads(meta_path(dest).read_text())
+        if meta.get("size_bytes", dest.stat().st_size) != dest.stat().st_size:
+            return False
+        if "sha256" in meta:
+            from ..core.provenance import sha256
+            return sha256(dest) == meta["sha256"]
+        return True  # compatibilidade com o cache histórico sem hash
+    except (ValueError, OSError):
+        return False
 
 
 def is_partial(dest: Path) -> bool:
@@ -92,7 +113,9 @@ def write_meta(
     partial: bool = False,
     extra: dict | None = None,
 ) -> None:
+    from ..core.provenance import sha256
     meta = {
+        "sha256": sha256(dest),
         "url": url,
         "params": params or {},
         "downloaded_at_utc": utcnow_iso(),
@@ -102,9 +125,7 @@ def write_meta(
     }
     if extra:
         meta.update(extra)
-    meta_path(dest).write_text(
-        json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    text(json.dumps(meta, indent=2, ensure_ascii=False), meta_path(dest))
 
 
 def write_parquet(
@@ -118,9 +139,7 @@ def write_parquet(
 ) -> None:
     """Escrita atômica de Parquet + meta de proveniência."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_name(dest.name + ".tmp")
-    df.to_parquet(tmp, index=False)
-    tmp.rename(dest)
+    parquet(df, dest)
     write_meta(dest, url=url, params=params, n_records=len(df), partial=partial, extra=extra)
 
 
@@ -137,9 +156,7 @@ def download_binary(
         return False
     resp = get(client, url, params=params)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_name(dest.name + ".tmp")
-    tmp.write_bytes(resp.content)
-    tmp.rename(dest)
+    atomic_write(dest, lambda tmp: tmp.write_bytes(resp.content))
     write_meta(dest, url=url, params=params, extra=extra)
     return True
 
@@ -153,3 +170,13 @@ def month_ranges(start: dt.date, end: dt.date) -> list[tuple[dt.date, dt.date]]:
         out.append((max(cur, start), min(nxt - dt.timedelta(days=1), end)))
         cur = nxt
     return out
+
+
+def source_order(path: Path) -> tuple[float, str]:
+    """Ordem de revisão: download mais recente vence, independentemente do nome."""
+    try:
+        meta = json.loads(meta_path(path).read_text())
+        stamp = pd.Timestamp(meta["downloaded_at_utc"]).timestamp()
+    except (OSError, ValueError, KeyError):
+        stamp = path.stat().st_mtime
+    return stamp, str(path)

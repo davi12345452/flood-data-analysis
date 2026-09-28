@@ -130,10 +130,10 @@ def test_regua_parada_nao_atrasa_as_outras_estacoes(monkeypatch):
     ds = frame.iloc[:50].assign(janela_id="ev1", tipo="evento")
     frame.loc[idx[-5]:, "nivel_mu"] = np.nan
     monkeypatch.setattr(pd, "read_parquet", lambda _: ds.reset_index(names="ts_utc"))
-    monkeypatch.setattr(operational, "configuracao_validada", lambda: {"modelos": []})
-    monkeypatch.setattr(operational, "escolhas_validadas", lambda: {
+    monkeypatch.setattr(operational, "configuracao_validada", lambda *args: {"modelos": []})
+    monkeypatch.setattr(operational, "escolhas_validadas", lambda *args: {
         (c, h): "linear" for c in operational.ALVOS for h in operational.HORIZONTES})
-    monkeypatch.setattr(operational, "prever_modelo", lambda tr, te, c, h, m:
+    monkeypatch.setattr(operational, "prever_modelo", lambda tr, te, c, h, m, **kwargs:
                         te[f"nivel_{operational.baselines.PROPRIA[c]}"] + h)
     prev, _ = operational.rodada(frame)
     assert prev[prev.alvo == "Muçum"].t_ref_utc.eq(idx[-6]).all()

@@ -89,8 +89,9 @@ def run() -> None:
 
     corpo = f"""# Fase 6 — Baselines (validação cruzada por evento)
 
-Protocolo: fold = evento (59 folds), treino = demais janelas, métricas pooled
-sobre todos os folds. `cobertura` = fração de pares obs/pred válidos — onde é
+Protocolo: fold = evento, treino = demais janelas com exclusão dos intervalos
+de informação que cruzam o teste (rótulos futuros e contexto horário de 120h).
+Validação retrospectiva, não simulação cronológica. Métricas pooled sobre os folds. `cobertura` = fração de pares obs/pred válidos — onde é
 baixa, a métrica mede só o caso fácil (Armadilha 0).
 
 Baselines: **persistencia** (cota atual se mantém), **regressao_lags** (linear

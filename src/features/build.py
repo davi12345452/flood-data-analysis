@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from ..core.contracts import hourly_index
+from ..core.storage import parquet
 from ..ingest.common import REFERENCE, ROOT, load_config
 from . import dams, level, rain
 
@@ -58,6 +60,7 @@ def montar() -> pd.DataFrame:
     frame = pd.concat(blocos, axis=1).sort_index()
     frame = frame.join(rain.juntar_api_em_horas(api, frame.index))
     frame.index.name = "ts_utc"
+    hourly_index(frame.index)
     return frame
 
 
@@ -65,7 +68,7 @@ def run() -> None:
     frame = montar()
     PROCESSED.mkdir(parents=True, exist_ok=True)
     out = PROCESSED / "features_hourly.parquet"
-    frame.reset_index().to_parquet(out, index=False)
+    parquet(frame.reset_index(), out)
     n_chuva = frame.filter(like="chuva_").notna().any(axis=1).sum()
     print(f"[features] {frame.shape[0]} horas × {frame.shape[1]} features em {out}")
     print(f"[features] horas com chuva horária disponível: {n_chuva} "

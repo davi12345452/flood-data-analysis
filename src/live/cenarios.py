@@ -15,6 +15,7 @@ probabilidade, e não é sistema de alerta.
 from __future__ import annotations
 
 import json
+import os
 import sys
 
 import geopandas as gpd
@@ -33,7 +34,7 @@ from sklearn.preprocessing import StandardScaler
 
 from ..ingest.common import REFERENCE, ROOT, load_config
 from ..models import baselines, gbm
-from .operational import ALVOS, ATRASOS, dataset_operacional, features_disponiveis
+from .operational import ALVOS, ATRASOS, dataset_operacional, features_disponiveis, treino_antes
 
 HORIZONTES = (6, 12, 18, 24)
 LATENCIA = ATRASOS["chuva"]
@@ -209,6 +210,8 @@ def pontos_unidade(passo: float = 0.2) -> dict[str, list[tuple[float, float]]]:
 
 def previsao_chuva(horas: int = 36) -> pd.DataFrame:
     """Chuva horária média por unidade e modelo (UTC, hora de início)."""
+    if os.environ.get("FLOOD_OFFLINE") == "1":
+        raise RuntimeError("Modo offline: previsão meteorológica requer rede.")
     linhas = []
     for u, pts in pontos_unidade().items():
         r = httpx.get("https://api.open-meteo.com/v1/forecast", timeout=60, params={
@@ -232,21 +235,42 @@ def chuva_postos(frame: pd.DataFrame) -> pd.DataFrame:
                         .mean(axis=1) for u, ps in POSTOS.items()})
 
 
+def referencia(frame: pd.DataFrame, base: list[str], ap: str, postos: pd.DataFrame,
+               recuo_max_h: int = 3) -> pd.Timestamp:
+    """Última hora com o alvo, todas as réguas do subconjunto e a chuva das
+    horas de latência presentes. Réguas de montante chegam com uma hora de
+    atraso; sem isso a Ridge descarta justamente o sinal da onda que vem.
+    Sem dado completo no recuo máximo, usa a última cota do alvo."""
+    fim = frame[f"nivel_{ap}"].last_valid_index()
+    reguas = [c for c in base if c.startswith("nivel_")]
+    for recuo in range(recuo_max_h + 1):
+        t = fim - pd.Timedelta(hours=recuo)
+        if t not in frame.index or frame.loc[t, reguas].isna().any():
+            continue
+        horas = pd.date_range(t - pd.Timedelta(hours=LATENCIA), periods=LATENCIA, freq="h")
+        chuva_ok = all(chuva_por_hora(frame[f"chuva_{u}_1h"]).reindex(horas)
+                       .fillna(postos[u].reindex(horas)).notna().all() for u in UNIDADES)
+        if chuva_ok:
+            return t
+    return fim
+
+
 def cenarios(frame: pd.DataFrame, prev_chuva: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     disp = features_disponiveis(frame)
     postos = chuva_postos(frame)
     tabela, chuvas = [], []
     for codigo, (nome, ap) in ALVOS.items():
-        t = frame[f"nivel_{ap}"].last_valid_index()
         ds = montar(frame, codigo)
         base = colunas_base(ds)
+        t = referencia(frame, base, ap, postos)
         x0 = disp.loc[[t], base]
         # Horas não vistas antes de t: MERGE quando existe, senão postos.
         for h in HORIZONTES:
             nova = features_cenario(frame, h)
             presentes = [c for c in base if x0[c].notna().all()]
-            modelos = {"gbm": treinar(ds.join(nova), codigo, h, base + list(nova.columns)),
-                       "ridge": treinar(ds.join(nova), codigo, h, presentes + list(nova.columns), "ridge")}
+            treino = treino_antes(ds.join(nova), t, h)
+            modelos = {"gbm": treinar(treino, codigo, h, base + list(nova.columns)),
+                       "ridge": treinar(treino, codigo, h, presentes + list(nova.columns), "ridge")}
             horas_passadas = pd.date_range(t - pd.Timedelta(hours=LATENCIA), periods=LATENCIA, freq="h")
             horas_futuras = pd.date_range(t, periods=h, freq="h")
             cenas = {"sem mais chuva": {u: 0.0 for u in UNIDADES}}
@@ -257,9 +281,9 @@ def cenarios(frame: pd.DataFrame, prev_chuva: pd.DataFrame) -> tuple[pd.DataFram
                 x = x0.copy()
                 for u in UNIDADES:
                     merge = chuva_por_hora(frame[f"chuva_{u}_1h"]).reindex(horas_passadas)
-                    x[f"nova_passada_{u}"] = merge.fillna(postos[u].reindex(horas_passadas)).sum()
+                    x[f"nova_passada_{u}"] = merge.fillna(postos[u].reindex(horas_passadas)).sum(min_count=LATENCIA)
                     x[f"nova_futura_{u}"] = futura[u]
-                completa = all(pd.notna(v) for v in futura.values())
+                completa = x.filter(regex="^nova_").notna().all(axis=None)
                 for motor, modelo in modelos.items():
                     valor = prever(modelo, x, codigo)[0] if completa else np.nan
                     tabela.append({"alvo": nome, "codigo": codigo, "h": h, "cenario": cena, "motor": motor,

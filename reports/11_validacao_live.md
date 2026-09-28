@@ -29,11 +29,11 @@ Estas métricas não validam uso operacional nem estabelecem um teto físico.
 
 |   codigo |   h | motor     |   mae_selecao_cm |
 |---------:|----:|:----------|-----------------:|
-| 86510000 |   6 | gbm_delta |             45.4 |
-| 86510000 |   9 | gbm_delta |             75.6 |
-| 86510000 |  12 | gbm_delta |             98.7 |
+| 86510000 |   6 | gbm_delta |             45.5 |
+| 86510000 |   9 | gbm_delta |             75.7 |
+| 86510000 |  12 | gbm_delta |             98.9 |
 | 86720000 |   6 | linear    |             45.1 |
-| 86720000 |   9 | gbm_delta |             66.7 |
+| 86720000 |   9 | gbm_delta |             66   |
 | 86720000 |  12 | gbm_delta |            116.1 |
 | 86879300 |   6 | linear    |             33.9 |
 | 86879300 |   9 | linear    |             55.2 |
@@ -45,91 +45,91 @@ Três janelas: janeiro, junho/julho e julho. Janeiro não tem pares no regime al
 
 | alvo      |   h | motor     |   MAE_cm |   pior_MAE_evento_cm |   eventos_com_pares |   pares |
 |:----------|----:|:----------|---------:|---------------------:|--------------------:|--------:|
-| Encantado |   6 | linear    |     46.1 |                 68.7 |                   2 |     181 |
-| Encantado |   9 | gbm_delta |     49.6 |                 76.3 |                   2 |     190 |
-| Encantado |  12 | gbm_delta |     76.3 |                120.9 |                   2 |     199 |
-| Estrela   |   6 | linear    |     24.4 |                 38.6 |                   2 |     169 |
-| Estrela   |   9 | linear    |     40.3 |                 64.1 |                   2 |     178 |
-| Estrela   |  12 | linear    |     59.7 |                 92.3 |                   2 |     187 |
-| Muçum     |   6 | gbm_delta |     39.9 |                 50.8 |                   3 |     291 |
-| Muçum     |   9 | gbm_delta |     63.6 |                 81.1 |                   3 |     304 |
-| Muçum     |  12 | gbm_delta |     97.4 |                129.2 |                   3 |     312 |
+| Encantado |   6 | linear    |     45.5 |                 67.6 |                   2 |     184 |
+| Encantado |   9 | gbm_delta |     47.2 |                 71.5 |                   2 |     193 |
+| Encantado |  12 | gbm_delta |     74.4 |                118.7 |                   2 |     202 |
+| Estrela   |   6 | linear    |     24.3 |                 38.3 |                   2 |     171 |
+| Estrela   |   9 | linear    |     39.9 |                 63.3 |                   2 |     180 |
+| Estrela   |  12 | linear    |     59.1 |                 91.2 |                   2 |     189 |
+| Muçum     |   6 | gbm_delta |     41.3 |                 62.5 |                   3 |     344 |
+| Muçum     |   9 | gbm_delta |     62.3 |                 86.9 |                   3 |     357 |
+| Muçum     |  12 | gbm_delta |     93.5 |                130.5 |                   3 |     365 |
 
 ## Comparação no regime alto (cm)
 
 | particao   | alvo      |   h | motor        |   MAE_cm |   vies_cm |   eventos |    n |
 |:-----------|:----------|----:|:-------------|---------:|----------:|----------:|-----:|
-| selecao    | Encantado |   6 | gbm_delta    |     49.7 |     -26.1 |        13 |  930 |
-| selecao    | Encantado |   6 | gbm_nivel    |     84.7 |     -30.8 |        13 |  930 |
+| selecao    | Encantado |   6 | gbm_delta    |     49.8 |     -26.8 |        13 |  930 |
+| selecao    | Encantado |   6 | gbm_nivel    |     88.9 |     -33.6 |        13 |  930 |
 | selecao    | Encantado |   6 | linear       |     45.1 |      -4.4 |        13 |  930 |
 | selecao    | Encantado |   6 | persistencia |    137.8 |     -74.1 |        13 |  930 |
-| selecao    | Encantado |   9 | gbm_delta    |     66.7 |     -35.5 |        13 |  966 |
-| selecao    | Encantado |   9 | gbm_nivel    |     94.6 |     -29.9 |        13 |  966 |
+| selecao    | Encantado |   9 | gbm_delta    |     66   |     -34.9 |        13 |  966 |
+| selecao    | Encantado |   9 | gbm_nivel    |     96.1 |     -34   |        13 |  966 |
 | selecao    | Encantado |   9 | linear       |     91.1 |     -44.1 |        13 |  966 |
 | selecao    | Encantado |   9 | persistencia |    160.2 |     -68.3 |        13 |  966 |
-| selecao    | Encantado |  12 | gbm_delta    |    116.1 |     -70.8 |        13 | 1007 |
-| selecao    | Encantado |  12 | gbm_nivel    |    132.6 |     -63.1 |        13 | 1007 |
+| selecao    | Encantado |  12 | gbm_delta    |    116.1 |     -72.8 |        13 | 1007 |
+| selecao    | Encantado |  12 | gbm_nivel    |    136.7 |     -72.4 |        13 | 1007 |
 | selecao    | Encantado |  12 | linear       |    137.7 |     -81.9 |        13 | 1007 |
 | selecao    | Encantado |  12 | persistencia |    219.4 |    -100.2 |        13 | 1007 |
-| selecao    | Estrela   |   6 | gbm_delta    |     58.8 |     -32.9 |        12 |  728 |
-| selecao    | Estrela   |   6 | gbm_nivel    |    113.2 |     -91   |        12 |  728 |
+| selecao    | Estrela   |   6 | gbm_delta    |     58.9 |     -31.9 |        12 |  728 |
+| selecao    | Estrela   |   6 | gbm_nivel    |    115.7 |     -94.1 |        12 |  728 |
 | selecao    | Estrela   |   6 | linear       |     33.9 |       1.1 |        12 |  728 |
 | selecao    | Estrela   |   6 | persistencia |    119.6 |     -63.3 |        12 |  728 |
-| selecao    | Estrela   |   9 | gbm_delta    |     94.9 |     -47.3 |        12 |  762 |
-| selecao    | Estrela   |   9 | gbm_nivel    |    136.3 |    -108.4 |        12 |  762 |
+| selecao    | Estrela   |   9 | gbm_delta    |     94.4 |     -47.3 |        12 |  762 |
+| selecao    | Estrela   |   9 | gbm_nivel    |    140   |    -110.9 |        12 |  762 |
 | selecao    | Estrela   |   9 | linear       |     55.2 |      -6.8 |        12 |  762 |
 | selecao    | Estrela   |   9 | persistencia |    168.4 |     -88   |        12 |  762 |
-| selecao    | Estrela   |  12 | gbm_delta    |    125.6 |     -55.4 |        12 |  799 |
-| selecao    | Estrela   |  12 | gbm_nivel    |    140.5 |    -103   |        12 |  799 |
+| selecao    | Estrela   |  12 | gbm_delta    |    124.8 |     -56.2 |        12 |  799 |
+| selecao    | Estrela   |  12 | gbm_nivel    |    145.1 |    -105.3 |        12 |  799 |
 | selecao    | Estrela   |  12 | linear       |     83.5 |     -31.9 |        12 |  799 |
 | selecao    | Estrela   |  12 | persistencia |    197.1 |     -94.6 |        12 |  799 |
-| selecao    | Muçum     |   6 | gbm_delta    |     45.4 |     -24.3 |        21 | 1754 |
-| selecao    | Muçum     |   6 | gbm_nivel    |     62   |     -37.6 |        21 | 1754 |
+| selecao    | Muçum     |   6 | gbm_delta    |     45.5 |     -24.8 |        21 | 1754 |
+| selecao    | Muçum     |   6 | gbm_nivel    |     68.1 |     -49.3 |        21 | 1754 |
 | selecao    | Muçum     |   6 | linear       |     50.3 |     -27.8 |        21 | 1754 |
 | selecao    | Muçum     |   6 | persistencia |    104.4 |     -52.3 |        21 | 1754 |
-| selecao    | Muçum     |   9 | gbm_delta    |     75.6 |     -45   |        21 | 1813 |
-| selecao    | Muçum     |   9 | gbm_nivel    |     94.6 |     -65.8 |        21 | 1813 |
+| selecao    | Muçum     |   9 | gbm_delta    |     75.7 |     -46.6 |        21 | 1813 |
+| selecao    | Muçum     |   9 | gbm_nivel    |    100.4 |     -79.5 |        21 | 1813 |
 | selecao    | Muçum     |   9 | linear       |     89   |     -50.8 |        21 | 1813 |
 | selecao    | Muçum     |   9 | persistencia |    142.9 |     -70.3 |        21 | 1813 |
-| selecao    | Muçum     |  12 | gbm_delta    |     98.7 |     -62.7 |        21 | 1868 |
-| selecao    | Muçum     |  12 | gbm_nivel    |    118.3 |     -87.9 |        21 | 1868 |
+| selecao    | Muçum     |  12 | gbm_delta    |     98.9 |     -64.1 |        21 | 1868 |
+| selecao    | Muçum     |  12 | gbm_nivel    |    126.5 |     -99.3 |        21 | 1868 |
 | selecao    | Muçum     |  12 | linear       |    120.6 |     -72.3 |        21 | 1868 |
 | selecao    | Muçum     |  12 | persistencia |    173   |     -82   |        21 | 1868 |
-| teste      | Encantado |   6 | gbm_delta    |     30.1 |      -4.1 |         2 |  181 |
-| teste      | Encantado |   6 | gbm_nivel    |     68.1 |      49.7 |         2 |  181 |
-| teste      | Encantado |   6 | linear       |     46.1 |     -10.7 |         2 |  181 |
-| teste      | Encantado |   6 | persistencia |    125.2 |      -9.9 |         2 |  181 |
-| teste      | Encantado |   9 | gbm_delta    |     49.6 |     -16.7 |         2 |  190 |
-| teste      | Encantado |   9 | gbm_nivel    |     92.2 |      52.7 |         2 |  190 |
-| teste      | Encantado |   9 | linear       |     77.3 |     -25.3 |         2 |  190 |
-| teste      | Encantado |   9 | persistencia |    182.5 |     -17.7 |         2 |  190 |
-| teste      | Encantado |  12 | gbm_delta    |     76.3 |     -32.3 |         2 |  199 |
-| teste      | Encantado |  12 | gbm_nivel    |    112.4 |      33.7 |         2 |  199 |
-| teste      | Encantado |  12 | linear       |    112.3 |     -42.6 |         2 |  199 |
-| teste      | Encantado |  12 | persistencia |    236.6 |     -27.1 |         2 |  199 |
-| teste      | Estrela   |   6 | gbm_delta    |     19.4 |       8.1 |         2 |  169 |
-| teste      | Estrela   |   6 | gbm_nivel    |     50.8 |      22.9 |         2 |  169 |
-| teste      | Estrela   |   6 | linear       |     24.4 |       0.3 |         2 |  169 |
-| teste      | Estrela   |   6 | persistencia |    100   |      -2.7 |         2 |  169 |
-| teste      | Estrela   |   9 | gbm_delta    |     36.2 |       6.1 |         2 |  178 |
-| teste      | Estrela   |   9 | gbm_nivel    |     57.8 |      12.6 |         2 |  178 |
-| teste      | Estrela   |   9 | linear       |     40.3 |      -3.6 |         2 |  178 |
-| teste      | Estrela   |   9 | persistencia |    147.4 |      -6   |         2 |  178 |
-| teste      | Estrela   |  12 | gbm_delta    |     50.4 |       3.9 |         2 |  187 |
-| teste      | Estrela   |  12 | gbm_nivel    |     73.8 |      -1   |         2 |  187 |
-| teste      | Estrela   |  12 | linear       |     59.7 |      -7.6 |         2 |  187 |
-| teste      | Estrela   |  12 | persistencia |    191.7 |      -9.7 |         2 |  187 |
-| teste      | Muçum     |   6 | gbm_delta    |     39.9 |      17.2 |         3 |  291 |
-| teste      | Muçum     |   6 | gbm_nivel    |     32.3 |      13.4 |         3 |  291 |
-| teste      | Muçum     |   6 | linear       |     25.6 |      -3.1 |         3 |  291 |
-| teste      | Muçum     |   6 | persistencia |    126.5 |     -59   |         3 |  291 |
-| teste      | Muçum     |   9 | gbm_delta    |     63.6 |     -21.8 |         3 |  304 |
-| teste      | Muçum     |   9 | gbm_nivel    |     61.6 |     -13   |         3 |  304 |
-| teste      | Muçum     |   9 | linear       |     79.7 |     -31.6 |         3 |  304 |
-| teste      | Muçum     |   9 | persistencia |    157   |     -61.3 |         3 |  304 |
-| teste      | Muçum     |  12 | gbm_delta    |     97.4 |     -55   |         3 |  312 |
-| teste      | Muçum     |  12 | gbm_nivel    |     97.6 |     -43.8 |         3 |  312 |
-| teste      | Muçum     |  12 | linear       |    126.8 |     -80.3 |         3 |  312 |
-| teste      | Muçum     |  12 | persistencia |    176.9 |     -54.3 |         3 |  312 |
+| teste      | Encantado |   6 | gbm_delta    |     27.4 |      -3.8 |         2 |  184 |
+| teste      | Encantado |   6 | gbm_nivel    |     72.7 |      57   |         2 |  184 |
+| teste      | Encantado |   6 | linear       |     45.5 |     -10.5 |         2 |  184 |
+| teste      | Encantado |   6 | persistencia |    123.6 |      -9.3 |         2 |  184 |
+| teste      | Encantado |   9 | gbm_delta    |     47.2 |     -15   |         2 |  193 |
+| teste      | Encantado |   9 | gbm_nivel    |     97.9 |      63.2 |         2 |  193 |
+| teste      | Encantado |   9 | linear       |     76.3 |     -24.8 |         2 |  193 |
+| teste      | Encantado |   9 | persistencia |    180.4 |     -16.8 |         2 |  193 |
+| teste      | Encantado |  12 | gbm_delta    |     74.4 |     -32.4 |         2 |  202 |
+| teste      | Encantado |  12 | gbm_nivel    |    103.6 |      26.8 |         2 |  202 |
+| teste      | Encantado |  12 | linear       |    111   |     -41.8 |         2 |  202 |
+| teste      | Encantado |  12 | persistencia |    234   |     -26   |         2 |  202 |
+| teste      | Estrela   |   6 | gbm_delta    |     36.7 |       5   |         2 |  171 |
+| teste      | Estrela   |   6 | gbm_nivel    |     47.3 |      19.2 |         2 |  171 |
+| teste      | Estrela   |   6 | linear       |     24.3 |       0.5 |         2 |  171 |
+| teste      | Estrela   |   6 | persistencia |     99.4 |      -2.2 |         2 |  171 |
+| teste      | Estrela   |   9 | gbm_delta    |     68.9 |      -0.6 |         2 |  180 |
+| teste      | Estrela   |   9 | gbm_nivel    |     61.6 |      17.7 |         2 |  180 |
+| teste      | Estrela   |   9 | linear       |     39.9 |      -3.4 |         2 |  180 |
+| teste      | Estrela   |   9 | persistencia |    146.3 |      -5.4 |         2 |  180 |
+| teste      | Estrela   |  12 | gbm_delta    |     77.6 |       2.7 |         2 |  189 |
+| teste      | Estrela   |  12 | gbm_nivel    |     77.9 |      18.8 |         2 |  189 |
+| teste      | Estrela   |  12 | linear       |     59.1 |      -7.4 |         2 |  189 |
+| teste      | Estrela   |  12 | persistencia |    190.3 |      -9   |         2 |  189 |
+| teste      | Muçum     |   6 | gbm_delta    |     41.3 |      20.5 |         3 |  344 |
+| teste      | Muçum     |   6 | gbm_nivel    |     33.3 |       5   |         3 |  344 |
+| teste      | Muçum     |   6 | linear       |     22.9 |      -1.7 |         3 |  344 |
+| teste      | Muçum     |   6 | persistencia |    119.1 |     -56   |         3 |  344 |
+| teste      | Muçum     |   9 | gbm_delta    |     62.3 |     -16.9 |         3 |  357 |
+| teste      | Muçum     |   9 | gbm_nivel    |     57.7 |      -6.8 |         3 |  357 |
+| teste      | Muçum     |   9 | linear       |     75.7 |     -29.1 |         3 |  357 |
+| teste      | Muçum     |   9 | persistencia |    146.3 |     -56.8 |         3 |  357 |
+| teste      | Muçum     |  12 | gbm_delta    |     93.5 |     -50.6 |         3 |  365 |
+| teste      | Muçum     |  12 | gbm_nivel    |     90.6 |     -42.5 |         3 |  365 |
+| teste      | Muçum     |  12 | linear       |    120.9 |     -76.1 |         3 |  365 |
+| teste      | Muçum     |  12 | persistencia |    163   |     -48.4 |         3 |  365 |
 
 Reprodução: `uv run python -m src.live.evaluate`. Métricas detalhadas: [CSV](11_validacao_live_metricas.csv).

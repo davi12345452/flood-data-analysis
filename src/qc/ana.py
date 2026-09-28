@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from ..ingest.common import RAW, ROOT, load_config
+from ..ingest.common import RAW, ROOT, load_config, source_order
 from . import flags
 
 INTERIM = ROOT / "data" / "interim"
@@ -28,16 +28,22 @@ INTERIM = ROOT / "data" / "interim"
 
 def carregar_estacao(codigo: int) -> pd.DataFrame:
     arquivos = sorted((RAW / "ana_soap" / f"estacao={codigo}").rglob("*.parquet"))
+    arquivos += sorted((RAW / "ana_live" / str(codigo)).glob("*.parquet"))
     if not arquivos:
         return pd.DataFrame()
     partes = []
-    for a in arquivos:
+    for a in sorted(arquivos, key=source_order):
         parte = pd.read_parquet(a)
         parte["origem"] = f"{a.parent.name}/{a.name}"
+        parte["_versao_fonte"] = len(partes)
         partes.append(parte)
     df = pd.concat(partes, ignore_index=True)
     df["dt_local"] = pd.to_datetime(df["DataHora"], errors="coerce")
-    return df.dropna(subset=["dt_local"])
+    df = df.dropna(subset=["dt_local"])
+    # Atualizações posteriores vencem, preservando duplicatas dentro da mesma
+    # resposta para que o QC ainda possa marcá-las.
+    ultima = df.groupby("dt_local")["_versao_fonte"].transform("max")
+    return df[df._versao_fonte == ultima].drop(columns="_versao_fonte")
 
 
 def qc_15min(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
@@ -113,7 +119,8 @@ def run() -> None:
 
     final = pd.concat(partes, ignore_index=True)
     INTERIM.mkdir(parents=True, exist_ok=True)
-    final.to_parquet(INTERIM / "ana_hourly.parquet", index=False)
+    from ..core.storage import parquet
+    parquet(final, INTERIM / "ana_hourly.parquet")
     print(f"[qc.ana] {len(final)} linhas em data/interim/ana_hourly.parquet")
 
 

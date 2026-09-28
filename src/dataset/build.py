@@ -20,6 +20,8 @@ import json
 
 import pandas as pd
 
+from ..core.contracts import hourly_index
+from ..core.storage import parquet
 from ..ingest.common import ROOT, load_config
 
 PROCESSED = ROOT / "data" / "processed"
@@ -42,6 +44,7 @@ def colunas_do_subconjunto(frame: pd.DataFrame, sub: dict) -> list[str]:
 
 def montar_alvo(frame: pd.DataFrame, codigo: int, horizontes: list[int],
                 janelas: list[dict], sub: dict) -> pd.DataFrame:
+    hourly_index(frame.index)
     ap = APELIDO[codigo]
     nivel = frame[f"nivel_{ap}"]
 
@@ -51,7 +54,7 @@ def montar_alvo(frame: pd.DataFrame, codigo: int, horizontes: list[int],
         ini, fim = pd.Timestamp(j["inicio"]), pd.Timestamp(j["fim"])
         bloco = frame.loc[ini:fim, cols].copy()
         for h in horizontes:
-            bloco[f"y_{h}h"] = nivel.shift(-h).loc[ini:fim]
+            bloco[f"y_{h}h"] = nivel.reindex(bloco.index + pd.Timedelta(hours=h)).to_numpy()
         bloco["janela_id"] = j["nome"]
         bloco["tipo"] = "evento" if j["nome"].startswith("ev") else "normal"
         partes.append(bloco)
@@ -72,7 +75,7 @@ def run() -> None:
         sub = cfg["subconjuntos"][codigo]
         ds = montar_alvo(frame, codigo, cfg["horizontes_h"], janelas, sub)
         out = PROCESSED / f"dataset_{codigo}.parquet"
-        ds.reset_index().to_parquet(out, index=False)
+        parquet(ds.reset_index(), out)
         n_ev = (ds["tipo"] == "evento").sum()
         cobertura_chuva = ds.filter(like="chuva_").notna().all(axis=1).mean()
         print(f"[dataset] {codigo}: {len(ds)} linhas ({n_ev} evento / "

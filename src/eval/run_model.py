@@ -119,7 +119,8 @@ def run(report_only: bool = False) -> None:
     corpo = f"""# Fase 7 — LightGBM (CV por evento, mesmas regras dos baselines)
 
 Config: raso e regularizado (config/model.yaml). NaN nativo, sem imputação.
-Early stopping nas janelas finais do treino de cada fold. Variante
+Early stopping nas janelas finais do treino de cada fold, também com purga
+temporal. Features com chuva incompleta permanecem NaN. Variante
 `gbm_restrito` treina só com nível >= atenção (Armadilha 2); teste idêntico.
 
 ## Comparação com os baselines (pooled, todos os eventos)
@@ -130,25 +131,17 @@ Early stopping nas janelas finais do treino de cada fold. Variante
 
 {verd.to_markdown(index=False)}
 
-**Leitura honesta:** a regressão linear vence em h=3-6 (e Estrela h=12) — no
-curto prazo a propagação é quase linear e árvore não extrapola tão bem. O GBM
-se paga nos horizontes longos (12-24h), onde a chuva e a não-linearidade
-importam. Consequência para uso: **modelo por horizonte** (linear em <=6h,
-GBM em >=12h) é a configuração defensável — não uma derrota do pipeline, mas
-o resultado clássico de rio com resposta quase linear no curto prazo.
+A tabela acima identifica o vencedor em cada estação/horizonte. As métricas
+foram recalculadas com purga temporal e chuva incompleta preservada como NaN.
+O protocolo é retrospectivo; a avaliação cronológica está no relatório live.
 
 ## Armadilha 2, teste justo — só horas com ALVO >= atenção
 
 {_fmt(regime_alto.sort_values(["alvo", "h", "modelo"]))}
 
-Restringir o treino a >= atenção **não ajudou** neste desenho (exceção
-marginal: Muçum 24h). Plausível: nossa amostragem por evento já concentra o
-treino no regime alto; o corte só joga fora informação de subida. A premissa
-importada do estudo de 2025 não se replica aqui — registrado.
-
-Nota sobria: no regime alto em h=24, NSE cai para 0,24-0,58 em todos os
-modelos — consistente com o teto físico de antecedência (~12h Muçum, ~8h
-Estrela) com chuva observada (Armadilha 5).
+A comparação entre treino completo e restrito deve ser lida nas métricas
+recalculadas acima. Estes resultados não estabelecem um teto físico de
+antecedência nem uma garantia operacional.
 
 ## Só eventos de referência (set/2023, nov/2023, mai/2024)
 

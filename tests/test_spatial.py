@@ -49,13 +49,21 @@ class TestConvencoesTemporais:
 
 
 class TestPesos:
-    def test_media_ponderada_ignora_nan(self):
-        # replica a lógica de agregar_arquivo
-        valores = np.array([10.0, np.nan, 30.0])
-        pesos = np.array([0.5, 0.3, 0.2])
-        ok = ~np.isnan(valores)
-        resultado = float(np.sum(valores[ok] * pesos[ok]))
-        assert resultado == pytest.approx(10.0 * 0.5 + 30.0 * 0.2)
+    def test_media_ponderada_exige_cobertura_completa(self, monkeypatch):
+        from pathlib import Path
+        from unittest.mock import MagicMock
+
+        import xarray as xr
+
+        from src.spatial import merge_agg
+        da = xr.DataArray([[10., np.nan, 30.]], dims=("latitude", "longitude"))
+        monkeypatch.setattr(merge_agg, "abrir_precip", lambda _: da)
+        cache = MagicMock()
+        cache.para.return_value = pd.DataFrame({"codigo": [1, 1, 1], "i": [0, 0, 0],
+                                                "j": [0, 1, 2], "peso": [.5, .3, .2]})
+        assert np.isnan(merge_agg.agregar_arquivo(Path("test"), cache)[1])
+        da.values[0, 1] = 20.
+        assert merge_agg.agregar_arquivo(Path("test"), cache)[1] == pytest.approx(17.)
 
     def test_pesos_reais_somam_um(self):
         from pathlib import Path

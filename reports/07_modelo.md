@@ -1,193 +1,186 @@
 # Fase 7 — LightGBM (CV por evento, mesmas regras dos baselines)
 
 Config: raso e regularizado (config/model.yaml). NaN nativo, sem imputação.
-Early stopping nas janelas finais do treino de cada fold. Variante
+Early stopping nas janelas finais do treino de cada fold, também com purga
+temporal. Features com chuva incompleta permanecem NaN. Variante
 `gbm_restrito` treina só com nível >= atenção (Armadilha 2); teste idêntico.
 
 ## Comparação com os baselines (pooled, todos os eventos)
 
 | alvo      |   h | modelo         |    NSE |   KGE |   RMSE_cm |   MAE_cm |   cobertura |     n |
 |:----------|----:|:---------------|-------:|------:|----------:|---------:|------------:|------:|
-| Encantado |   3 | regressao_lags |  0.996 | 0.998 |      14.5 |      6.5 |        93.5 | 14967 |
-| Encantado |   3 | persistencia   |  0.98  | 0.989 |      34.6 |     18.3 |        96.4 | 15424 |
-| Encantado |   3 | gbm            |  0.973 | 0.955 |      41.2 |     16.9 |        97.4 | 15588 |
-| Encantado |   3 | propagacao     |  0.918 | 0.927 |      71.5 |     58.4 |        96   | 15361 |
-| Encantado |   3 | gbm_restrito   | -0.066 | 0.266 |     258.2 |    225.4 |        97.4 | 15588 |
-| Encantado |   6 | regressao_lags |  0.976 | 0.986 |      37.5 |     18.3 |        93.3 | 14931 |
-| Encantado |   6 | gbm            |  0.969 | 0.976 |      44.2 |     20.4 |        97.4 | 15592 |
-| Encantado |   6 | persistencia   |  0.931 | 0.965 |      64.8 |     34.9 |        96.2 | 15385 |
-| Encantado |   6 | propagacao     |  0.87  | 0.897 |      90.1 |     65.8 |        96   | 15355 |
-| Encantado |   6 | gbm_restrito   |  0.027 | 0.312 |     246.3 |    214.4 |        97.4 | 15592 |
-| Encantado |  12 | gbm            |  0.938 | 0.967 |      62.1 |     31.7 |        97.4 | 15592 |
-| Encantado |  12 | regressao_lags |  0.881 | 0.928 |      82.6 |     42.1 |        92.9 | 14867 |
-| Encantado |  12 | persistencia   |  0.776 | 0.888 |     115.3 |     62.5 |        95.7 | 15320 |
-| Encantado |  12 | propagacao     |  0.722 | 0.794 |     131.3 |     83.2 |        95.9 | 15337 |
-| Encantado |  12 | gbm_restrito   |  0.115 | 0.395 |     234.4 |    195.8 |        97.4 | 15592 |
-| Encantado |  24 | gbm            |  0.767 | 0.807 |     119.7 |     58.7 |        97.5 | 15594 |
-| Encantado |  24 | regressao_lags |  0.57  | 0.707 |     157.5 |     75.8 |        92.5 | 14794 |
-| Encantado |  24 | propagacao     |  0.415 | 0.546 |     190.4 |    109.3 |        95.7 | 15314 |
-| Encantado |  24 | persistencia   |  0.36  | 0.682 |     193.8 |    103.5 |        95.3 | 15241 |
-| Encantado |  24 | gbm_restrito   | -0.119 | 0.356 |     262.5 |    210.6 |        97.5 | 15594 |
-| Estrela   |   3 | regressao_lags |  0.997 | 0.997 |      10.2 |      7   |        87.9 |  9395 |
-| Estrela   |   3 | persistencia   |  0.985 | 0.988 |      28.9 |     14.9 |        95.8 | 10241 |
-| Estrela   |   3 | gbm            |  0.91  | 0.858 |      72.5 |     18.8 |        97   | 10367 |
-| Estrela   |   3 | propagacao     |  0.848 | 0.8   |      75.1 |     51.4 |        90.1 |  9624 |
-| Estrela   |   3 | gbm_restrito   | -0.07  | 0.558 |     249.5 |    231.9 |        97   | 10367 |
-| Estrela   |   6 | regressao_lags |  0.988 | 0.99  |      20.4 |     13.4 |        87.8 |  9385 |
-| Estrela   |   6 | persistencia   |  0.944 | 0.967 |      55.3 |     27.2 |        95.6 | 10218 |
-| Estrela   |   6 | gbm            |  0.925 | 0.891 |      66.1 |     21.2 |        97   | 10368 |
-| Estrela   |   6 | propagacao     |  0.836 | 0.792 |      79.2 |     54.3 |        90.1 |  9628 |
-| Estrela   |   6 | gbm_restrito   |  0.353 | 0.68  |     194   |    171.7 |        97   | 10368 |
-| Estrela   |  12 | regressao_lags |  0.932 | 0.949 |      49.6 |     28.3 |        87.6 |  9363 |
-| Estrela   |  12 | gbm            |  0.883 | 0.87  |      82.5 |     30.1 |        97   | 10368 |
-| Estrela   |  12 | persistencia   |  0.806 | 0.895 |     102   |     47   |        95.3 | 10185 |
-| Estrela   |  12 | propagacao     |  0.73  | 0.721 |     102.6 |     65.5 |        90   |  9618 |
-| Estrela   |  12 | gbm_restrito   |  0.389 | 0.741 |     188.4 |    149.8 |        97   | 10368 |
-| Estrela   |  24 | gbm            |  0.686 | 0.73  |     135   |     55.2 |        97.1 | 10371 |
-| Estrela   |  24 | regressao_lags |  0.619 | 0.707 |     118.4 |     58.7 |        87.3 |  9333 |
-| Estrela   |  24 | persistencia   |  0.443 | 0.698 |     172.8 |     79.5 |        95   | 10150 |
-| Estrela   |  24 | propagacao     |  0.403 | 0.452 |     151   |     82.7 |        89.8 |  9600 |
-| Estrela   |  24 | gbm_restrito   |  0.126 | 0.677 |     225.1 |    157   |        97.1 | 10371 |
-| Muçum     |   3 | regressao_lags |  0.992 | 0.996 |      24.3 |     11   |        74.1 | 13347 |
-| Muçum     |   3 | gbm            |  0.981 | 0.96  |      41.9 |     14.7 |        98.9 | 17817 |
-| Muçum     |   3 | persistencia   |  0.98  | 0.99  |      42.7 |     23.5 |        98.4 | 17733 |
-| Muçum     |   3 | propagacao     |  0.964 | 0.975 |      52.7 |     35.2 |        75.7 | 13641 |
-| Muçum     |   3 | gbm_restrito   |  0.503 | 0.496 |     213.7 |    167.2 |        98.9 | 17817 |
-| Muçum     |   6 | regressao_lags |  0.975 | 0.986 |      43.3 |     21.4 |        73.8 | 13308 |
-| Muçum     |   6 | gbm            |  0.968 | 0.954 |      54.1 |     21.3 |        98.8 | 17811 |
-| Muçum     |   6 | propagacao     |  0.943 | 0.963 |      66.7 |     37.9 |        75.6 | 13628 |
-| Muçum     |   6 | persistencia   |  0.932 | 0.966 |      78.8 |     44.5 |        98.2 | 17695 |
-| Muçum     |   6 | gbm_restrito   |  0.526 | 0.519 |     208.2 |    163.6 |        98.8 | 17811 |
-| Muçum     |  12 | gbm            |  0.935 | 0.941 |      76.9 |     35.7 |        98.8 | 17799 |
-| Muçum     |  12 | regressao_lags |  0.881 | 0.926 |      96.1 |     49   |        73.5 | 13252 |
-| Muçum     |  12 | propagacao     |  0.809 | 0.874 |     122.5 |     66.8 |        75.5 | 13604 |
-| Muçum     |  12 | persistencia   |  0.794 | 0.897 |     136.6 |     78.1 |        97.8 | 17634 |
-| Muçum     |  12 | gbm_restrito   |  0.539 | 0.561 |     204.7 |    159.4 |        98.8 | 17799 |
-| Muçum     |  24 | gbm            |  0.778 | 0.782 |     141.3 |     68   |        98.7 | 17781 |
-| Muçum     |  24 | regressao_lags |  0.597 | 0.725 |     178.2 |     92.1 |        73.3 | 13214 |
-| Muçum     |  24 | propagacao     |  0.507 | 0.645 |     198.1 |    107.7 |        75.3 | 13570 |
-| Muçum     |  24 | persistencia   |  0.459 | 0.732 |     221   |    124.5 |        97.6 | 17594 |
-| Muçum     |  24 | gbm_restrito   |  0.436 | 0.528 |     225.3 |    172.2 |        98.7 | 17781 |
+| Encantado |   3 | regressao_lags |  0.996 | 0.998 |      14.4 |      6.5 |        93.6 | 15042 |
+| Encantado |   3 | persistencia   |  0.98  | 0.989 |      34.6 |     18.3 |        96.4 | 15499 |
+| Encantado |   3 | gbm            |  0.962 | 0.941 |      48.7 |     17.8 |        97.4 | 15663 |
+| Encantado |   3 | propagacao     |  0.916 | 0.926 |      72.1 |     59.1 |        96   | 15436 |
+| Encantado |   3 | gbm_restrito   | -0.087 | 0.256 |     260.1 |    227.1 |        97.4 | 15663 |
+| Encantado |   6 | regressao_lags |  0.976 | 0.986 |      37.5 |     18.4 |        93.4 | 15009 |
+| Encantado |   6 | gbm            |  0.964 | 0.969 |      47.1 |     20.7 |        97.5 | 15670 |
+| Encantado |   6 | persistencia   |  0.93  | 0.965 |      64.7 |     34.9 |        96.2 | 15463 |
+| Encantado |   6 | propagacao     |  0.867 | 0.895 |      90.6 |     66.3 |        96   | 15433 |
+| Encantado |   6 | gbm_restrito   |  0.018 | 0.307 |     247   |    214.6 |        97.5 | 15670 |
+| Encantado |  12 | gbm            |  0.934 | 0.949 |      63.8 |     33   |        97.5 | 15676 |
+| Encantado |  12 | regressao_lags |  0.881 | 0.927 |      82.6 |     42.2 |        93   | 14951 |
+| Encantado |  12 | persistencia   |  0.775 | 0.888 |     115.1 |     62.5 |        95.8 | 15404 |
+| Encantado |  12 | propagacao     |  0.72  | 0.792 |     131.6 |     83.6 |        95.9 | 15421 |
+| Encantado |  12 | gbm_restrito   |  0.073 | 0.376 |     239.3 |    200.7 |        97.5 | 15676 |
+| Encantado |  24 | gbm            |  0.757 | 0.791 |     122   |     60.4 |        97.6 | 15690 |
+| Encantado |  24 | regressao_lags |  0.57  | 0.707 |     157.1 |     75.6 |        92.6 | 14890 |
+| Encantado |  24 | propagacao     |  0.412 | 0.544 |     190.4 |    109.5 |        95.9 | 15410 |
+| Encantado |  24 | persistencia   |  0.358 | 0.682 |     193.5 |    103.5 |        95.4 | 15337 |
+| Encantado |  24 | gbm_restrito   | -0.141 | 0.338 |     264.4 |    214.4 |        97.6 | 15690 |
+| Estrela   |   3 | regressao_lags |  0.997 | 0.997 |      10.3 |      7   |        88   |  9470 |
+| Estrela   |   3 | persistencia   |  0.985 | 0.988 |      28.8 |     14.9 |        95.9 | 10316 |
+| Estrela   |   3 | gbm            |  0.909 | 0.866 |      72.7 |     19.3 |        97   | 10442 |
+| Estrela   |   3 | propagacao     |  0.846 | 0.798 |      75.7 |     51.5 |        90.1 |  9699 |
+| Estrela   |   3 | gbm_restrito   |  0.121 | 0.598 |     225.4 |    204.9 |        97   | 10442 |
+| Estrela   |   6 | regressao_lags |  0.988 | 0.99  |      20.4 |     13.4 |        87.9 |  9463 |
+| Estrela   |   6 | persistencia   |  0.944 | 0.967 |      55.1 |     27.2 |        95.7 | 10296 |
+| Estrela   |   6 | gbm            |  0.919 | 0.888 |      68.5 |     21.9 |        97.1 | 10446 |
+| Estrela   |   6 | propagacao     |  0.835 | 0.793 |      79   |     54.2 |        90.2 |  9706 |
+| Estrela   |   6 | gbm_restrito   |  0.345 | 0.669 |     194.5 |    170.9 |        97.1 | 10446 |
+| Estrela   |  12 | regressao_lags |  0.931 | 0.949 |      49.5 |     28.3 |        87.8 |  9447 |
+| Estrela   |  12 | gbm            |  0.881 | 0.848 |      82.8 |     30   |        97.1 | 10452 |
+| Estrela   |  12 | persistencia   |  0.805 | 0.895 |     101.8 |     47   |        95.4 | 10269 |
+| Estrela   |  12 | propagacao     |  0.729 | 0.721 |     102.4 |     65.4 |        90.2 |  9702 |
+| Estrela   |  12 | gbm_restrito   |  0.488 | 0.756 |     171.7 |    131.8 |        97.1 | 10452 |
+| Estrela   |  24 | gbm            |  0.679 | 0.736 |     135.9 |     56.4 |        97.3 | 10467 |
+| Estrela   |  24 | regressao_lags |  0.618 | 0.707 |     118   |     58.6 |        87.6 |  9429 |
+| Estrela   |  24 | persistencia   |  0.437 | 0.696 |     173   |     79.8 |        95.2 | 10246 |
+| Estrela   |  24 | propagacao     |  0.402 | 0.452 |     150.5 |     82.4 |        90.1 |  9696 |
+| Estrela   |  24 | gbm_restrito   |  0.141 | 0.678 |     222.3 |    155.5 |        97.3 | 10467 |
+| Muçum     |   3 | regressao_lags |  0.992 | 0.996 |      24.2 |     11   |        74.2 | 13422 |
+| Muçum     |   3 | gbm            |  0.981 | 0.959 |      41.6 |     14.7 |        98.9 | 17892 |
+| Muçum     |   3 | persistencia   |  0.98  | 0.99  |      42.7 |     23.6 |        98.4 | 17808 |
+| Muçum     |   3 | propagacao     |  0.962 | 0.974 |      54   |     35.3 |        75.8 | 13711 |
+| Muçum     |   3 | gbm_restrito   |  0.529 | 0.512 |     207.6 |    160.8 |        98.9 | 17892 |
+| Muçum     |   6 | regressao_lags |  0.975 | 0.986 |      43.2 |     21.4 |        74   | 13386 |
+| Muçum     |   6 | gbm            |  0.969 | 0.955 |      52.8 |     20.9 |        98.8 | 17889 |
+| Muçum     |   6 | propagacao     |  0.942 | 0.962 |      66.7 |     37.9 |        75.7 | 13706 |
+| Muçum     |   6 | persistencia   |  0.932 | 0.966 |      78.8 |     44.6 |        98.2 | 17773 |
+| Muçum     |   6 | gbm_restrito   |  0.564 | 0.547 |     199.4 |    155.1 |        98.8 | 17889 |
+| Muçum     |  12 | gbm            |  0.934 | 0.938 |      77   |     35.9 |        98.8 | 17883 |
+| Muçum     |  12 | regressao_lags |  0.881 | 0.926 |      95.9 |     49.1 |        73.7 | 13336 |
+| Muçum     |  12 | propagacao     |  0.809 | 0.873 |     122.3 |     66.8 |        75.6 | 13688 |
+| Muçum     |  12 | persistencia   |  0.794 | 0.897 |     136.5 |     78.1 |        97.9 | 17718 |
+| Muçum     |  12 | gbm_restrito   |  0.541 | 0.56  |     203.9 |    158.6 |        98.8 | 17883 |
+| Muçum     |  24 | gbm            |  0.78  | 0.778 |     140.3 |     67.8 |        98.8 | 17877 |
+| Muçum     |  24 | regressao_lags |  0.597 | 0.725 |     177.7 |     91.9 |        73.5 | 13310 |
+| Muçum     |  24 | propagacao     |  0.507 | 0.645 |     197.6 |    107.3 |        75.5 | 13666 |
+| Muçum     |  24 | persistencia   |  0.458 | 0.732 |     220.6 |    124.4 |        97.7 | 17690 |
+| Muçum     |  24 | gbm_restrito   |  0.418 | 0.511 |     228.5 |    176.8 |        98.8 | 17877 |
 
 ## Veredito — o GBM bate os baselines internos? (critério: NSE pooled)
 
 | alvo      |   h |   NSE_gbm | melhor_baseline   |   NSE_baseline | gbm_vence   |
 |:----------|----:|----------:|:------------------|---------------:|:------------|
-| Encantado |   3 |     0.973 | regressao_lags    |          0.996 | False       |
-| Encantado |   6 |     0.969 | regressao_lags    |          0.976 | False       |
-| Encantado |  12 |     0.938 | regressao_lags    |          0.881 | True        |
-| Encantado |  24 |     0.767 | regressao_lags    |          0.57  | True        |
-| Estrela   |   3 |     0.91  | regressao_lags    |          0.997 | False       |
-| Estrela   |   6 |     0.925 | regressao_lags    |          0.988 | False       |
-| Estrela   |  12 |     0.883 | regressao_lags    |          0.932 | False       |
-| Estrela   |  24 |     0.686 | regressao_lags    |          0.619 | True        |
+| Encantado |   3 |     0.962 | regressao_lags    |          0.996 | False       |
+| Encantado |   6 |     0.964 | regressao_lags    |          0.976 | False       |
+| Encantado |  12 |     0.934 | regressao_lags    |          0.881 | True        |
+| Encantado |  24 |     0.757 | regressao_lags    |          0.57  | True        |
+| Estrela   |   3 |     0.909 | regressao_lags    |          0.997 | False       |
+| Estrela   |   6 |     0.919 | regressao_lags    |          0.988 | False       |
+| Estrela   |  12 |     0.881 | regressao_lags    |          0.931 | False       |
+| Estrela   |  24 |     0.679 | regressao_lags    |          0.618 | True        |
 | Muçum     |   3 |     0.981 | regressao_lags    |          0.992 | False       |
-| Muçum     |   6 |     0.968 | regressao_lags    |          0.975 | False       |
-| Muçum     |  12 |     0.935 | regressao_lags    |          0.881 | True        |
-| Muçum     |  24 |     0.778 | regressao_lags    |          0.597 | True        |
+| Muçum     |   6 |     0.969 | regressao_lags    |          0.975 | False       |
+| Muçum     |  12 |     0.934 | regressao_lags    |          0.881 | True        |
+| Muçum     |  24 |     0.78  | regressao_lags    |          0.597 | True        |
 
-**Leitura honesta:** a regressão linear vence em h=3-6 (e Estrela h=12) — no
-curto prazo a propagação é quase linear e árvore não extrapola tão bem. O GBM
-se paga nos horizontes longos (12-24h), onde a chuva e a não-linearidade
-importam. Consequência para uso: **modelo por horizonte** (linear em <=6h,
-GBM em >=12h) é a configuração defensável — não uma derrota do pipeline, mas
-o resultado clássico de rio com resposta quase linear no curto prazo.
+A tabela acima identifica o vencedor em cada estação/horizonte. As métricas
+foram recalculadas com purga temporal e chuva incompleta preservada como NaN.
+O protocolo é retrospectivo; a avaliação cronológica está no relatório live.
 
 ## Armadilha 2, teste justo — só horas com ALVO >= atenção
 
 | alvo      |   h | modelo       |   NSE |   KGE |   RMSE_cm |   MAE_cm |   cobertura |    n |
 |:----------|----:|:-------------|------:|------:|----------:|---------:|------------:|-----:|
-| Encantado |   3 | gbm          | 0.911 | 0.924 |      93   |     48   |         100 | 2665 |
-| Encantado |   3 | gbm_restrito | 0.895 | 0.849 |     100.7 |     55.8 |         100 | 2665 |
-| Encantado |   6 | gbm          | 0.905 | 0.936 |      95.8 |     54.5 |         100 | 2665 |
-| Encantado |   6 | gbm_restrito | 0.89  | 0.867 |     103.1 |     64.1 |         100 | 2665 |
-| Encantado |  12 | gbm          | 0.829 | 0.911 |     128.9 |     83   |         100 | 2665 |
-| Encantado |  12 | gbm_restrito | 0.771 | 0.81  |     149.1 |     95.6 |         100 | 2665 |
-| Encantado |  24 | gbm          | 0.291 | 0.594 |     262.1 |    173   |         100 | 2665 |
-| Encantado |  24 | gbm_restrito | 0.279 | 0.502 |     264.4 |    177   |         100 | 2665 |
-| Estrela   |   3 | gbm          | 0.762 | 0.759 |     189.4 |     82.7 |         100 | 1466 |
-| Estrela   |   3 | gbm_restrito | 0.799 | 0.701 |     173.9 |     94.7 |         100 | 1466 |
-| Estrela   |   6 | gbm          | 0.806 | 0.794 |     170.7 |     87.5 |         100 | 1466 |
-| Estrela   |   6 | gbm_restrito | 0.799 | 0.737 |     174   |     96.6 |         100 | 1466 |
-| Estrela   |  12 | gbm          | 0.713 | 0.748 |     207.9 |    119.6 |         100 | 1466 |
-| Estrela   |  12 | gbm_restrito | 0.673 | 0.722 |     222   |    138.1 |         100 | 1466 |
-| Estrela   |  24 | gbm          | 0.242 | 0.481 |     337.9 |    233   |         100 | 1466 |
-| Estrela   |  24 | gbm_restrito | 0.149 | 0.419 |     357.9 |    257.1 |         100 | 1466 |
-| Muçum     |   3 | gbm          | 0.953 | 0.916 |      74.1 |     30.2 |         100 | 5267 |
-| Muçum     |   3 | gbm_restrito | 0.898 | 0.812 |     108.8 |     42.7 |         100 | 5267 |
-| Muçum     |   6 | gbm          | 0.923 | 0.909 |      94.7 |     42.7 |         100 | 5267 |
-| Muçum     |   6 | gbm_restrito | 0.891 | 0.827 |     112.7 |     51.6 |         100 | 5267 |
-| Muçum     |  12 | gbm          | 0.854 | 0.892 |     130.5 |     68.3 |         100 | 5267 |
-| Muçum     |  12 | gbm_restrito | 0.855 | 0.836 |     130.1 |     70.5 |         100 | 5267 |
-| Muçum     |  24 | gbm          | 0.484 | 0.656 |     245.3 |    142.8 |         100 | 5267 |
-| Muçum     |  24 | gbm_restrito | 0.581 | 0.657 |     221   |    131.5 |         100 | 5267 |
+| Encantado |   3 | gbm          | 0.87  | 0.884 |     112.3 |     52.2 |         100 | 2665 |
+| Encantado |   3 | gbm_restrito | 0.892 | 0.839 |     102.5 |     55.1 |         100 | 2665 |
+| Encantado |   6 | gbm          | 0.887 | 0.926 |     104.7 |     57.7 |         100 | 2665 |
+| Encantado |   6 | gbm_restrito | 0.893 | 0.862 |     102   |     61.7 |         100 | 2665 |
+| Encantado |  12 | gbm          | 0.817 | 0.889 |     133.2 |     85.1 |         100 | 2665 |
+| Encantado |  12 | gbm_restrito | 0.77  | 0.792 |     149.3 |     95.6 |         100 | 2665 |
+| Encantado |  24 | gbm          | 0.251 | 0.574 |     269.4 |    179.2 |         100 | 2665 |
+| Encantado |  24 | gbm_restrito | 0.319 | 0.502 |     256.8 |    173   |         100 | 2665 |
+| Estrela   |   3 | gbm          | 0.759 | 0.766 |     190.4 |     85   |         100 | 1466 |
+| Estrela   |   3 | gbm_restrito | 0.802 | 0.703 |     172.6 |     93.5 |         100 | 1466 |
+| Estrela   |   6 | gbm          | 0.791 | 0.783 |     177.6 |     90.3 |         100 | 1466 |
+| Estrela   |   6 | gbm_restrito | 0.796 | 0.742 |     175.1 |     93.2 |         100 | 1466 |
+| Estrela   |  12 | gbm          | 0.708 | 0.737 |     209.6 |    116.7 |         100 | 1466 |
+| Estrela   |  12 | gbm_restrito | 0.683 | 0.719 |     218.3 |    134.3 |         100 | 1466 |
+| Estrela   |  24 | gbm          | 0.222 | 0.477 |     342.3 |    240.1 |         100 | 1466 |
+| Estrela   |  24 | gbm_restrito | 0.193 | 0.423 |     348.5 |    248.4 |         100 | 1466 |
+| Muçum     |   3 | gbm          | 0.954 | 0.918 |      73.3 |     29.7 |         100 | 5313 |
+| Muçum     |   3 | gbm_restrito | 0.903 | 0.823 |     106   |     39.8 |         100 | 5313 |
+| Muçum     |   6 | gbm          | 0.927 | 0.91  |      92.1 |     41.6 |         100 | 5313 |
+| Muçum     |   6 | gbm_restrito | 0.913 | 0.853 |     100.3 |     46.7 |         100 | 5313 |
+| Muçum     |  12 | gbm          | 0.853 | 0.887 |     130.6 |     68.7 |         100 | 5313 |
+| Muçum     |  12 | gbm_restrito | 0.856 | 0.829 |     129.3 |     70   |         100 | 5313 |
+| Muçum     |  24 | gbm          | 0.489 | 0.654 |     243.3 |    141.4 |         100 | 5313 |
+| Muçum     |  24 | gbm_restrito | 0.59  | 0.653 |     217.9 |    129.1 |         100 | 5313 |
 
-Restringir o treino a >= atenção **não ajudou** neste desenho (exceção
-marginal: Muçum 24h). Plausível: nossa amostragem por evento já concentra o
-treino no regime alto; o corte só joga fora informação de subida. A premissa
-importada do estudo de 2025 não se replica aqui — registrado.
-
-Nota sobria: no regime alto em h=24, NSE cai para 0,24-0,58 em todos os
-modelos — consistente com o teto físico de antecedência (~12h Muçum, ~8h
-Estrela) com chuva observada (Armadilha 5).
+A comparação entre treino completo e restrito deve ser lida nas métricas
+recalculadas acima. Estes resultados não estabelecem um teto físico de
+antecedência nem uma garantia operacional.
 
 ## Só eventos de referência (set/2023, nov/2023, mai/2024)
 
 | alvo      |   h | modelo       |   NSE |   KGE |   RMSE_cm |   MAE_cm |   cobertura |    n |
 |:----------|----:|:-------------|------:|------:|----------:|---------:|------------:|-----:|
-| Encantado |   3 | gbm          | 0.972 | 0.895 |      78.3 |     31.8 |        89.2 |  840 |
-| Encantado |   3 | gbm_restrito | 0.616 | 0.436 |     289   |    243.3 |        89.2 |  840 |
-| Encantado |   6 | gbm          | 0.967 | 0.878 |      84.8 |     41.3 |        88.6 |  835 |
-| Encantado |   6 | gbm_restrito | 0.665 | 0.487 |     270.3 |    228.5 |        88.6 |  835 |
-| Encantado |  12 | gbm          | 0.921 | 0.834 |     131.6 |     65.1 |        87.3 |  822 |
-| Encantado |  12 | gbm_restrito | 0.705 | 0.534 |     254.1 |    217.6 |        87.3 |  822 |
-| Encantado |  24 | gbm          | 0.725 | 0.648 |     246.3 |    120.7 |        84.7 |  798 |
-| Encantado |  24 | gbm_restrito | 0.522 | 0.436 |     324.8 |    255.9 |        84.7 |  798 |
-| Estrela   |   3 | gbm          | 0.808 | 0.693 |     230.1 |     91.7 |        84.6 |  932 |
-| Estrela   |   3 | gbm_restrito | 0.718 | 0.547 |     279.2 |    228.1 |        84.6 |  932 |
-| Estrela   |   6 | gbm          | 0.855 | 0.722 |     200.7 |     84.2 |        84.1 |  927 |
-| Estrela   |   6 | gbm_restrito | 0.771 | 0.621 |     251.8 |    192.3 |        84.1 |  927 |
-| Estrela   |  12 | gbm          | 0.801 | 0.677 |     235.5 |    103   |        83   |  915 |
-| Estrela   |  12 | gbm_restrito | 0.744 | 0.604 |     267.2 |    190.6 |        83   |  915 |
-| Estrela   |  24 | gbm          | 0.573 | 0.481 |     347.3 |    172.3 |        80.9 |  892 |
-| Estrela   |  24 | gbm_restrito | 0.596 | 0.5   |     338   |    212.9 |        80.9 |  892 |
-| Muçum     |   3 | gbm          | 0.957 | 0.858 |     102.3 |     40.1 |        98.6 | 1857 |
-| Muçum     |   3 | gbm_restrito | 0.808 | 0.64  |     216.2 |    133.6 |        98.6 | 1857 |
-| Muçum     |   6 | gbm          | 0.933 | 0.823 |     127.7 |     50.9 |        98.6 | 1857 |
-| Muçum     |   6 | gbm_restrito | 0.82  | 0.655 |     209.2 |    128.5 |        98.6 | 1857 |
-| Muçum     |  12 | gbm          | 0.913 | 0.807 |     144.6 |     64.5 |        98.6 | 1857 |
-| Muçum     |  12 | gbm_restrito | 0.852 | 0.71  |     189.2 |    120.4 |        98.6 | 1857 |
-| Muçum     |  24 | gbm          | 0.768 | 0.683 |     235.1 |    116   |        98.6 | 1857 |
-| Muçum     |  24 | gbm_restrito | 0.727 | 0.611 |     255.1 |    157.7 |        98.6 | 1857 |
+| Encantado |   3 | gbm          | 0.915 | 0.782 |     135.9 |     54.3 |        89.2 |  840 |
+| Encantado |   3 | gbm_restrito | 0.604 | 0.434 |     293.2 |    246.6 |        89.2 |  840 |
+| Encantado |   6 | gbm          | 0.951 | 0.864 |     103.3 |     47   |        88.6 |  835 |
+| Encantado |   6 | gbm_restrito | 0.671 | 0.49  |     267.6 |    226.3 |        88.6 |  835 |
+| Encantado |  12 | gbm          | 0.927 | 0.848 |     126.4 |     61.9 |        87.3 |  822 |
+| Encantado |  12 | gbm_restrito | 0.7   | 0.528 |     256.2 |    219.9 |        87.3 |  822 |
+| Encantado |  24 | gbm          | 0.727 | 0.66  |     245.1 |    122.2 |        84.7 |  798 |
+| Encantado |  24 | gbm_restrito | 0.503 | 0.415 |     331.2 |    262.2 |        84.7 |  798 |
+| Estrela   |   3 | gbm          | 0.807 | 0.693 |     230.6 |     92.7 |        84.6 |  932 |
+| Estrela   |   3 | gbm_restrito | 0.714 | 0.557 |     280.8 |    224.6 |        84.6 |  932 |
+| Estrela   |   6 | gbm          | 0.842 | 0.712 |     208.9 |     86.7 |        84.1 |  927 |
+| Estrela   |   6 | gbm_restrito | 0.777 | 0.626 |     248.7 |    187   |        84.1 |  927 |
+| Estrela   |  12 | gbm          | 0.796 | 0.671 |     238.3 |    104.4 |        83   |  915 |
+| Estrela   |  12 | gbm_restrito | 0.75  | 0.615 |     264.2 |    184.7 |        83   |  915 |
+| Estrela   |  24 | gbm          | 0.571 | 0.484 |     348.1 |    172.2 |        80.9 |  892 |
+| Estrela   |  24 | gbm_restrito | 0.596 | 0.5   |     337.7 |    214.2 |        80.9 |  892 |
+| Muçum     |   3 | gbm          | 0.959 | 0.862 |      99.8 |     39.3 |        98.6 | 1857 |
+| Muçum     |   3 | gbm_restrito | 0.805 | 0.637 |     217.8 |    135.6 |        98.6 | 1857 |
+| Muçum     |   6 | gbm          | 0.937 | 0.831 |     123.7 |     49.3 |        98.6 | 1857 |
+| Muçum     |   6 | gbm_restrito | 0.852 | 0.697 |     189.5 |    117.8 |        98.6 | 1857 |
+| Muçum     |  12 | gbm          | 0.902 | 0.784 |     153.7 |     68.6 |        98.6 | 1857 |
+| Muçum     |  12 | gbm_restrito | 0.84  | 0.685 |     196.6 |    124   |        98.6 | 1857 |
+| Muçum     |  24 | gbm          | 0.745 | 0.659 |     246.3 |    121.5 |        98.6 | 1857 |
+| Muçum     |  24 | gbm_restrito | 0.708 | 0.576 |     263.7 |    165.3 |        98.6 | 1857 |
 
 ## Importância de features (ganho médio entre folds, top 8, h=12, variante cheia)
 
 | alvo      |   h | feature                  |   ganho_medio |
 |:----------|----:|:-------------------------|--------------:|
-| Encantado |  12 | defluente_ca             |        0.3541 |
-| Encantado |  12 | nivel_en                 |        0.1809 |
-| Encantado |  12 | defluente_mc             |        0.1792 |
-| Encantado |  12 | nivel_mu                 |        0.1036 |
-| Encantado |  12 | chuva_antas_24h          |        0.0341 |
-| Encantado |  12 | chuva_medio_24h          |        0.0213 |
-| Encantado |  12 | tempo_desde_atencao_h_mu |        0.0166 |
-| Encantado |  12 | chuva_medio_48h          |        0.013  |
-| Estrela   |  12 | nivel_mu                 |        0.504  |
-| Estrela   |  12 | defluente_mc             |        0.0946 |
-| Estrela   |  12 | chuva_antas_48h          |        0.0717 |
-| Estrela   |  12 | chuva_antas_72h          |        0.0686 |
-| Estrela   |  12 | nivel_st                 |        0.0605 |
-| Estrela   |  12 | nivel_es                 |        0.031  |
-| Estrela   |  12 | chuva_antas_24h          |        0.0179 |
-| Estrela   |  12 | chuva_baixo_24h          |        0.0133 |
-| Muçum     |  12 | nivel_mu                 |        0.5787 |
-| Muçum     |  12 | tempo_desde_atencao_h_mu |        0.0894 |
-| Muçum     |  12 | defluente_mc             |        0.0826 |
-| Muçum     |  12 | chuva_antas_24h          |        0.0577 |
-| Muçum     |  12 | defluente_qj             |        0.0335 |
-| Muçum     |  12 | chuva_medio_24h          |        0.0262 |
-| Muçum     |  12 | chuva_antas_48h          |        0.025  |
-| Muçum     |  12 | defluente_ca             |        0.0241 |
+| Encantado |  12 | defluente_ca             |        0.3847 |
+| Encantado |  12 | nivel_en                 |        0.1845 |
+| Encantado |  12 | defluente_mc             |        0.1664 |
+| Encantado |  12 | nivel_mu                 |        0.098  |
+| Encantado |  12 | chuva_antas_24h          |        0.0378 |
+| Encantado |  12 | chuva_medio_24h          |        0.0148 |
+| Encantado |  12 | chuva_medio_48h          |        0.0128 |
+| Encantado |  12 | chuva_antas_12h          |        0.0111 |
+| Estrela   |  12 | nivel_mu                 |        0.5715 |
+| Estrela   |  12 | defluente_mc             |        0.0871 |
+| Estrela   |  12 | chuva_antas_48h          |        0.0849 |
+| Estrela   |  12 | nivel_st                 |        0.044  |
+| Estrela   |  12 | nivel_es                 |        0.0263 |
+| Estrela   |  12 | chuva_antas_72h          |        0.0213 |
+| Estrela   |  12 | chuva_antas_24h          |        0.0186 |
+| Estrela   |  12 | chuva_baixo_24h          |        0.0118 |
+| Muçum     |  12 | nivel_mu                 |        0.5836 |
+| Muçum     |  12 | tempo_desde_atencao_h_mu |        0.0943 |
+| Muçum     |  12 | defluente_mc             |        0.0765 |
+| Muçum     |  12 | chuva_antas_24h          |        0.0574 |
+| Muçum     |  12 | defluente_qj             |        0.0372 |
+| Muçum     |  12 | chuva_medio_24h          |        0.025  |
+| Muçum     |  12 | defluente_ca             |        0.0208 |
+| Muçum     |  12 | chuva_antas_12h          |        0.0204 |
 
 Alinha com a literatura da bacia (2025): predomínio de nível/dinâmica de
 montante e acumulados longos de chuva (chuva_*_24-120h ≈ "chuva máxima de

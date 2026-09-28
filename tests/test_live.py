@@ -77,10 +77,10 @@ def test_rodada_avalia_horizonte_longo_sem_recuar_referencia(monkeypatch):
         frame[f"dnivel_1h_{ap}"] = 1.0
     ds = frame.iloc[:50].assign(janela_id="ev1", tipo="evento")
     monkeypatch.setattr(pd, "read_parquet", lambda _: ds.reset_index(names="ts_utc"))
-    monkeypatch.setattr(op, "escolhas_validadas", lambda: {
+    monkeypatch.setattr(op, "escolhas_validadas", lambda *args: {
         (c, h): "gbm_delta" for c in op.ALVOS for h in op.HORIZONTES})
-    monkeypatch.setattr(op, "configuracao_validada", lambda: {"modelos": []})
-    monkeypatch.setattr(op, "prever_modelo", lambda tr, te, c, h, m:
+    monkeypatch.setattr(op, "configuracao_validada", lambda *args: {"modelos": []})
+    monkeypatch.setattr(op, "prever_modelo", lambda tr, te, c, h, m, **kwargs:
                         te[f"nivel_{op.baselines.PROPRIA[c]}"] + h)
     prev, bt = op.rodada(frame, horas=24)
     assert len(prev) == 12
@@ -134,11 +134,11 @@ def test_escolha_nao_depende_dos_erros_de_2026(tmp_path, monkeypatch):
                            "motor": motor, "regime": "alto", "particao": particao,
                            "mae_cm": erro, "vies_cm": -erro, "n": 10})
     metricas = pd.DataFrame(linhas)
-    evaluate.publicar(metricas, pd.DataFrame())
+    evaluate.publicar(metricas, pd.DataFrame(), contrato={"synthetic": True})
     primeiro = json.loads((tmp_path / "11_live_modelos.json").read_text())
     metricas.loc[(metricas.particao == "teste") & (metricas.motor == "gbm_delta"),
                   "mae_cm"] = 99999
-    evaluate.publicar(metricas, pd.DataFrame())
+    evaluate.publicar(metricas, pd.DataFrame(), contrato={"synthetic": True})
     segundo = json.loads((tmp_path / "11_live_modelos.json").read_text())
     assert primeiro["modelos"] == segundo["modelos"]
     assert primeiro["modelos"][0]["motor"] == "gbm_delta"

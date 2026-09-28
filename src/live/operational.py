@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import json
 
-import lightgbm as lgb
 import pandas as pd
-from sklearn.linear_model import Ridge
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 
+from ..core import provenance
+from ..core.contracts import hourly_index
 from ..ingest.common import ROOT, load_config
 from ..models import baselines, gbm
+from ..models.forecast import fit_cached
 from .adaptation import corrigir
 from .uncertainty import cobertura_recente, faixa_empirica
 
@@ -73,68 +72,19 @@ def treino_antes(ds: pd.DataFrame, corte: pd.Timestamp, h: int) -> pd.DataFrame:
 
 
 def prever_modelo(train: pd.DataFrame, test: pd.DataFrame, codigo: int,
-                  h: int, motor: str) -> pd.Series:
-    if motor == "linear":
-        return baselines.regressao_lags(train, test, codigo, h)
-    if motor == "ridge_montante":
-        return prever_montante(train, test, codigo, h)
-    if motor not in (*MOTORES, "gbm_postos"):
-        raise ValueError(f"Motor desconhecido: {motor}")
-    cols = gbm.colunas_features(train)
-    if motor == "gbm_postos" and not any(c.startswith("posto_") for c in cols):
-        raise ValueError("GBM de postos requer features de chuva ANA; reconstrua o pool.")
-    if motor != "gbm_postos":
-        # Mantém exatamente as entradas dos GBMs já publicados.
-        cols = [c for c in cols if not c.startswith("posto_")]
-    propria = f"nivel_{baselines.PROPRIA[codigo]}"
-    alvo = f"y_{h}h"
-    train = train.dropna(subset=[alvo, propria]).copy()
-    if motor in ("gbm_delta", "gbm_postos"):
-        train[alvo] = train[alvo] - train[propria]
-    cfg = load_config("model")
-    tr, ev = gbm._split_early_stopping(train, cfg["valid_frac_janelas"])
-    if len(tr) < 500 or len(ev) < 50:
-        tr, ev = train, None
-    modelo = lgb.LGBMRegressor(**(cfg["lgbm"] | {"n_jobs": 4, "random_state": 42}))
-    kwargs = {} if ev is None else {
-        "eval_set": [(ev[cols], ev[alvo])],
-        "callbacks": [lgb.early_stopping(cfg["early_stopping_rounds"], verbose=False)],
-    }
-    modelo.fit(tr[cols], tr[alvo], **kwargs)
-    # Sensores auxiliares podem faltar; o nível do alvo tem de ser atual.
-    ok = test[propria].notna()
-    pred = pd.Series(float("nan"), index=test.index, name="pred")
-    if ok.any():
-        pred.loc[ok] = modelo.predict(test.loc[ok, cols])
-        if motor in ("gbm_delta", "gbm_postos"):
-            pred.loc[ok] += test.loc[ok, propria]
+                  h: int, motor: str, *, cache=None) -> pd.Series:
+    modelo = fit_cached(train, codigo, h, motor, load_config("model"), cache)
+    pred = modelo.predict(test)
+    pred.attrs["modelo_id"] = modelo.artifact_id
     return pred
 
 
 def prever_montante(train: pd.DataFrame, test: pd.DataFrame, codigo: int,
                     h: int) -> pd.Series:
-    """Ridge da variação de cota com todas as réguas do subconjunto físico.
-
-    Alpha fixo, sem ajuste ao evento corrente. Padronização só no treino.
-    Sem fabricar cotas em falhas: usa o linear anterior quando falta uma das
-    réguas adicionais. Não mistura réguas a jusante do alvo.
-    """
-    cols = [c for c in train if c.startswith(("nivel_", "dnivel_1h_", "dnivel_3h_"))]
-    propria = f"nivel_{baselines.PROPRIA[codigo]}"
-    alvo = f"y_{h}h"
-    tr = train.dropna(subset=cols + [alvo])
-    pred = baselines.regressao_lags(train, test, codigo, h)
-    if len(tr) < 500:
-        return pred
-    modelo = make_pipeline(StandardScaler(), Ridge(alpha=100.0))
-    modelo.fit(tr[cols], tr[alvo] - tr[propria])
-    ok = test[cols].notna().all(axis=1)
-    if ok.any():
-        pred.loc[ok] = test.loc[ok, propria] + modelo.predict(test.loc[ok, cols])
-    return pred
+    return prever_modelo(train, test, codigo, h, "ridge_montante")
 
 
-def configuracao_validada() -> dict:
+def configuracao_validada(frame: pd.DataFrame) -> dict:
     arquivo = ROOT / "reports/12_live_modelos.json"
     if not arquivo.exists():
         arquivo = ROOT / "reports/11_live_modelos.json"
@@ -143,12 +93,16 @@ def configuracao_validada() -> dict:
     manifesto = json.loads(arquivo.read_text())
     if manifesto["atrasos_h"] != ATRASOS:
         raise RuntimeError("Latências alteradas: refaça a validação antes de prever.")
+    provenance.validate(manifesto.get("contrato"), frame)
+    if "base_sha256" in manifesto and manifesto["base_sha256"] != provenance.sha256(
+            ROOT / "reports/11_live_modelos.json"):
+        raise RuntimeError("Validação base mudou; execute src.live.improve novamente.")
     return manifesto
 
 
-def escolhas_validadas() -> dict[tuple[int, int], str]:
+def escolhas_validadas(manifesto: dict) -> dict[tuple[int, int], str]:
     escolhas = {(int(m["codigo"]), int(m["h"])): m["motor"]
-                for m in configuracao_validada()["modelos"]}
+                for m in manifesto["modelos"]}
     escolhas.update({(codigo, 3): "linear" for codigo in ALVOS})
     return escolhas
 
@@ -160,8 +114,9 @@ def rodada(frame: pd.DataFrame, horas: int = 48) -> tuple[pd.DataFrame, pd.DataF
     régua que parou de transmitir. O replay usa
     48h de observações, com referências até 12h anteriores a essa janela.
     """
-    escolhas = escolhas_validadas()
-    manifesto = configuracao_validada()
+    hourly_index(frame.index)
+    manifesto = configuracao_validada(frame)
+    escolhas = escolhas_validadas(manifesto)
     politicas = {(m["codigo"], m["h"]): m for m in manifesto["modelos"]}
     faixas = {(m["codigo"], m["h"], m["subida_rapida"]): m for m in manifesto.get("faixas", [])}
     disponiveis = features_disponiveis(frame)
@@ -180,7 +135,8 @@ def rodada(frame: pd.DataFrame, horas: int = 48) -> tuple[pd.DataFrame, pd.DataF
         for h in HORIZONTES:
             motor = escolhas[(codigo, h)]
             train = treino_antes(ds, inicio_ref, h)
-            pred = prever_modelo(train, test, codigo, h, motor)
+            pred = prever_modelo(train, test, codigo, h, motor,
+                                 cache=ROOT / "data/processed/model_cache")
             politica = politicas.get((codigo, h), {})
             adaptado = corrigir(pred, frame[f"nivel_{ap}"], h,
                                ganho=politica.get("ganho", 0),
@@ -210,6 +166,7 @@ def rodada(frame: pd.DataFrame, horas: int = 48) -> tuple[pd.DataFrame, pd.DataF
                            "previsto_cm": valor, "valido_para_utc": fim + pd.Timedelta(hours=h),
                            "status": "estimativa" if pd.notna(valor) else "dados_insuficientes",
                            "treino_ultima_ref": train.index.max(),
+                           "modelo_id": pred.attrs.get("modelo_id"),
                            "base_cm": pred.loc[fim], "ajuste_cm": adaptado.loc[fim, "ajuste_cm"],
                            "n_ajuste": adaptado.loc[fim, "n_ajuste"],
                            "subida_rapida": rapido, "velocidade_cm_h": velocidade,

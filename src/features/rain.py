@@ -7,6 +7,9 @@ O API diário avaliado em t usa apenas períodos de 24h já encerrados antes de 
 
 from __future__ import annotations
 
+import math
+
+import numpy as np
 import pandas as pd
 
 from ..ingest.common import ROOT, load_config
@@ -38,7 +41,7 @@ def carregar_macro_horaria() -> pd.DataFrame:
     if not arquivos:
         raise RuntimeError("Sem MERGE horário agregado — rode make spatial.")
     df = pd.concat((pd.read_parquet(a) for a in arquivos), ignore_index=True)
-    df = df.drop_duplicates(subset=["ts_utc", "codigo"])
+    df = df.drop_duplicates(subset=["ts_utc", "codigo"], keep="last")
     return _para_macro(df, cfg["macro_unidades"], areas, freq="h")
 
 
@@ -52,18 +55,21 @@ def carregar_macro_diaria() -> pd.DataFrame:
 
 def _para_macro(df: pd.DataFrame, macro: dict, areas: pd.DataFrame, freq: str) -> pd.DataFrame:
     pesos = areas.set_index("codigo")["area_incremental_km2"]
+    if df.duplicated(["ts_utc", "codigo"]).any():
+        raise ValueError("Chuva com chave (ts_utc, codigo) duplicada.")
     partes = {}
     for nome, codigos in macro.items():
-        sub = df[df["codigo"].isin(codigos)].copy()
-        sub["w"] = sub["codigo"].map(pesos)
-        soma = sub.groupby("ts_utc").apply(
-            lambda g: (g["chuva_mm"] * g["w"]).sum() / g["w"].sum(), include_groups=False
-        )
-        partes[nome] = soma
+        w = pesos.reindex(codigos)
+        if w.isna().any() or (w <= 0).any():
+            raise ValueError(f"Áreas incrementais inválidas em {nome}.")
+        sub = df[df.codigo.isin(codigos)].pivot(index="ts_utc", columns="codigo", values="chuva_mm")
+        sub = sub.reindex(columns=codigos)
+        # Exige toda a área: ausência parcial ou total não é chuva zero.
+        partes[nome] = sub.mul(w).sum(axis=1, min_count=len(codigos)) / w.sum()
     out = pd.DataFrame(partes).sort_index()
     out.index.name = "ts_utc"
-    # Grade temporal contínua: períodos sem MERGE ficam NaN em vez de
-    # ausentes — rolling posicional atravessaria a lacuna entre janelas.
+    if out.empty:
+        return out
     grade = pd.date_range(out.index.min(), out.index.max(), freq=freq)
     return out.reindex(grade)
 
@@ -74,10 +80,7 @@ def acumulados(horaria: pd.DataFrame, janelas: list[int]) -> pd.DataFrame:
     for macro in horaria.columns:
         serie = horaria[macro]
         for w in janelas:
-            # Janelas longas toleram ~2% de horas faltantes: a soma usa só o
-            # observado (subconta levemente; não fabrica). Janelas curtas
-            # exigem completude — cada hora pesa demais.
-            min_p = w if w <= 12 else int(w * 0.98)
+            min_p = w  # toda hora da janela precisa ser observada
             feats[f"chuva_{macro}_{w}h"] = (
                 serie.rolling(w, min_periods=min_p).sum().shift(1)
             )
@@ -85,17 +88,29 @@ def acumulados(horaria: pd.DataFrame, janelas: list[int]) -> pd.DataFrame:
 
 
 def api_diaria(diaria: pd.DataFrame, decaimentos: list[float]) -> pd.DataFrame:
-    """API_d = k*API_{d-1} + chuva_d, por macro-unidade e decaimento.
+    """Soma exponencial causal, com memória finita até peso de 1%.
 
-    O valor indexado no período D só está completo no FIM de D — quem consome
-    deve juntar por 'último período diário já encerrado' (ver juntar_api_em_horas).
+    Uma lacuna invalida o API enquanto pertence à memória de k (44/228 dias
+    para .90/.98). A origem do histórico assume estado zero; não existe
+    imputação de chuva. A implementação numérica usa zero provisório, mas
+    mascara toda saída que depende de uma observação ausente.
     """
     feats = {}
+    if diaria.empty:
+        return pd.DataFrame(index=diaria.index)
+    diaria = diaria.reindex(pd.date_range(diaria.index.min(), diaria.index.max(), freq="24h"))
     for macro in diaria.columns:
-        serie = diaria[macro].fillna(0.0)  # dias sem grade (raros) não zeram o estado
+        serie = diaria[macro]
         for k in decaimentos:
-            api = serie.ewm(alpha=1 - k, adjust=False).mean() / (1 - k)
-            feats[f"api_{macro}_k{int(k * 100)}"] = api
+            if not 0 < k < 1:
+                raise ValueError("Decaimento do API deve estar entre 0 e 1.")
+            memoria = math.ceil(math.log(.01) / math.log(k))
+            valores = serie.fillna(0.0)
+            estado = valores.ewm(alpha=1-k, adjust=False).mean() / (1-k)
+            estado -= valores.iloc[0] * k ** (np.arange(len(serie)) + 1) / (1-k)
+            api = estado - k**memoria * estado.shift(memoria, fill_value=0)
+            completo = serie.isna().rolling(memoria, min_periods=1).sum().eq(0)
+            feats[f"api_{macro}_k{int(k * 100)}"] = api.where(completo)
     return pd.DataFrame(feats, index=diaria.index)
 
 

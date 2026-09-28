@@ -12,6 +12,7 @@ from __future__ import annotations
 import lightgbm as lgb
 import pandas as pd
 
+from ..eval.cv import purgar
 from ..ingest.common import REFERENCE, load_config
 
 APELIDO = {86510000: "mu", 86720000: "en", 86879300: "es"}
@@ -31,7 +32,8 @@ def _split_early_stopping(train: pd.DataFrame, frac: float) -> tuple[pd.DataFram
     n_eval = max(1, int(len(ordem) * frac))
     janelas_eval = set(ordem[-n_eval:])
     eval_mask = train["janela_id"].isin(janelas_eval)
-    return train[~eval_mask], train[eval_mask]
+    ev = train[eval_mask]
+    return purgar(train[~eval_mask], ev), ev
 
 
 def treinar_prever(train: pd.DataFrame, test: pd.DataFrame, codigo: int, h: int,
@@ -51,7 +53,7 @@ def treinar_prever(train: pd.DataFrame, test: pd.DataFrame, codigo: int, h: int,
     if len(tr) < 500 or len(ev) < 50:
         tr, ev = train, None
 
-    modelo = lgb.LGBMRegressor(**cfg["lgbm"])
+    modelo = lgb.LGBMRegressor(**({"n_jobs": 4, "random_state": 42} | cfg["lgbm"]))
     if ev is not None and len(ev):
         modelo.fit(
             tr[cols], tr[alvo],

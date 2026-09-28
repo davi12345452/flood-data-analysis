@@ -69,3 +69,10 @@ class TestRotulos:
         ds = montar_alvo(frame_sintetico(), 86510000, [3], janelas, SUB)
         assert set(ds["tipo"].unique()) == {"evento", "normal"}
         assert (ds[ds["janela_id"] == "ev20240501"]["tipo"] == "evento").all()
+
+
+def test_rotulo_historico_busca_timestamp_exato_em_grade_com_buraco():
+    f = frame_sintetico().drop(index=H[25])
+    ds = montar_alvo(f, 86510000, [3, 6], JANELAS, SUB)
+    assert pd.isna(ds.loc[H[22], 'y_3h'])
+    assert ds.loc[H[23], 'y_3h'] == 26.

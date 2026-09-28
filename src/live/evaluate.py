@@ -7,10 +7,10 @@ Executar: uv run python -m src.live.evaluate [--frame caminho.parquet]
 from __future__ import annotations
 
 import argparse
-import json
 
 import pandas as pd
 
+from ..core import provenance
 from ..features.build import montar
 from ..ingest.common import ROOT
 from .operational import (
@@ -70,7 +70,7 @@ def avaliar(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.DataFrame(linhas), pd.concat(previsoes, ignore_index=True)
 
 
-def publicar(metricas: pd.DataFrame, preds: pd.DataFrame) -> None:
+def publicar(metricas: pd.DataFrame, preds: pd.DataFrame, *, contrato: dict) -> None:
     metricas.to_csv(REPORTS / "11_validacao_live_metricas.csv", index=False)
     preds.to_parquet(PROCESSED / "live_validacao_previsoes.parquet", index=False)
     selecao = metricas[(metricas.particao == "selecao") & (metricas.regime == "alto")
@@ -84,9 +84,9 @@ def publicar(metricas: pd.DataFrame, preds: pd.DataFrame) -> None:
     manifesto = {"protocolo": "cronologico_latencia_v1", "atrasos_h": ATRASOS,
                  "selecao": "eventos 2023–2025; MAE médio por evento no regime alto",
                  "teste": "eventos 2026, sem escolher modelo com estes resultados",
-                 "modelos": escolhas}
-    (REPORTS / "11_live_modelos.json").write_text(
-        json.dumps(manifesto, ensure_ascii=False, indent=2) + "\n")
+                 "modelos": escolhas, "contrato": contrato,
+                 "previsoes_sha256": provenance.sha256(PROCESSED / "live_validacao_previsoes.parquet")}
+    provenance.publish_manifest(manifesto, REPORTS / "11_live_modelos.json")
     agregado = metricas.groupby(["particao", "alvo", "h", "motor", "regime"]).agg(
         MAE_cm=("mae_cm", "mean"), vies_cm=("vies_cm", "mean"),
         eventos=("mae_cm", "count"), n=("n", "sum")).reset_index()
@@ -147,7 +147,10 @@ def main() -> None:
     parser.add_argument("--frame", help="Pool local já montado, opcional")
     args = parser.parse_args()
     frame = pd.read_parquet(args.frame) if args.frame else montar()
-    publicar(*avaliar(frame))
+    contrato = provenance.contract(frame)
+    resultado = avaliar(frame)
+    provenance.validate(contrato, frame)
+    publicar(*resultado, contrato=contrato)
 
 
 if __name__ == "__main__":

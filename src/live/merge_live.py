@@ -12,6 +12,8 @@ import datetime as dt
 
 import pandas as pd
 
+from ..core.contracts import merge_observations
+from ..core.storage import parquet
 from ..ingest import merge
 from ..ingest.common import RAW, ROOT, load_config, make_client
 from ..spatial.merge_agg import RE_DIA, RE_HORA, PesosPorGrade, agregar_arquivo
@@ -70,8 +72,14 @@ def horaria_live(desde: pd.Timestamp) -> pd.Timestamp:
         # rótulo do arquivo = FIM da acumulação horária; saída = início
         linhas.extend({"ts_utc": rotulo - pd.Timedelta(hours=1), "codigo": c,
                        "chuva_mm": v} for c, v in valores.items())
-    df = pd.DataFrame(linhas)
-    df.to_parquet(destino / "janela=live.parquet", index=False)
+    out = destino / "janela=live.parquet"
+    df = pd.DataFrame(linhas, columns=["ts_utc", "codigo", "chuva_mm"])
+    if out.exists():
+        df = merge_observations(pd.read_parquet(out), df.drop_duplicates(["codigo", "ts_utc"], keep="last"), "codigo")
+    if df.empty:
+        print("[live.merge] sem chuva horária nova; histórico preservado", flush=True)
+        return pd.NaT
+    parquet(df, out)
     print(f"[live.merge] horária: {len(df)} linhas até {df['ts_utc'].max()} "
           f"({len(ilegiveis)} ilegíveis)", flush=True)
     return df["ts_utc"].max()
@@ -99,15 +107,17 @@ def diaria_incremental() -> pd.Timestamp:
             inicio = rotulo + pd.Timedelta(hours=12) - pd.Timedelta(hours=24)
             linhas.extend({"ts_utc": inicio, "codigo": c, "chuva_mm": v}
                           for c, v in valores.items())
-        novo = pd.DataFrame(linhas)
+        novo = pd.DataFrame(linhas, columns=["ts_utc", "codigo", "chuva_mm"])
         out = destino / f"ano={ano}.parquet"
         if out.exists():
             antigo = pd.read_parquet(out)
             novo = pd.concat([antigo, novo], ignore_index=True)
             # o recém-agregado vence em caso de reprocessamento do mesmo dia
             novo = novo.drop_duplicates(subset=["ts_utc", "codigo"], keep="last")
+        if novo.empty:
+            continue
         novo = novo.sort_values(["ts_utc", "codigo"])
-        novo.to_parquet(out, index=False)
+        parquet(novo, out)
         ultimo = novo["ts_utc"].max()
         print(f"[live.merge] diária {ano}: até {ultimo}", flush=True)
     return ultimo
